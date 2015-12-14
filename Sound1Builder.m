@@ -10,7 +10,7 @@ TimeSum = 3;
 
 CoefLen2Time = TimeSum/LengthSum;
 
-NumPointSum = TimeSum*AudioSampleRate;
+NumPointSum = round(TimeSum*AudioSampleRate);
 
 GapWidth = 0.01;
 
@@ -71,20 +71,6 @@ for iDot = 1:NumDot - 1
     
     DataChirp = chirp((1:SeqNumDotPoint(iDot)+NumPadPoint)/AudioSampleRate,SeqFreq(iDot),SeqNumDotPoint(iDot)/AudioSampleRate,SeqFreq(iDot+1),'logarithmic');
 
-    if iDot == 1 %首段开头截短至0
-        
-        StartPoint = 1;
-        while DataChirp(StartPoint)>0
-            
-            StartPoint = StartPoint + 1;
-            
-        end
-        
-    else
-        StartPoint = 1;
-        
-    end
-
     if mod(iDot,2) == 0 %偶数段结尾截短至1
         
         EndPoint = SeqNumDotPoint(iDot);
@@ -108,13 +94,13 @@ for iDot = 1:NumDot - 1
     end
     
     
-    AmpRight = linspace(SeqRightAmp(iDot),SeqRightAmp(iDot+1),EndPoint-StartPoint+1);
+    AmpRight = linspace(SeqRightAmp(iDot),SeqRightAmp(iDot+1),EndPoint);
     AmpLeft = 1 - AmpRight;
     
-    DataAudio1(1,CurrentPoint+1:CurrentPoint+EndPoint-StartPoint+1) = DataChirp(StartPoint:EndPoint).*AmpLeft;
-    DataAudio1(2,CurrentPoint+1:CurrentPoint+EndPoint-StartPoint+1) = DataChirp(StartPoint:EndPoint).*AmpRight;
+    DataAudio1(1,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpLeft;
+    DataAudio1(2,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpRight;
     
-    CurrentPoint = CurrentPoint+EndPoint-StartPoint+1;
+    CurrentPoint = CurrentPoint+EndPoint;
 
 end
 
@@ -125,53 +111,35 @@ NumPointError = NumSegPoint - CurrentPoint;
 
 iPoint = 2:CurrentPoint-1;
 
-PassZeroIndex = [true,DataAudio1(1,iPoint).*DataAudio1(1,iPoint+1)<=0,false];
-
-PassZeroIndex = find(PassZeroIndex);
-
-iPoint = 3:CurrentPoint-1;
-
-PeakIndex = [false,false,DataAudio1(1,iPoint-1)>= DataAudio1(1,iPoint) & DataAudio1(1,iPoint-1)>= DataAudio1(1,iPoint-2),true];
+PeakIndex = [true,DataAudio1(1,iPoint)>= DataAudio1(1,iPoint-1) & DataAudio1(1,iPoint)>= DataAudio1(1,iPoint+1),true];
 
 PeakIndex = find(PeakIndex);
 
- 
-  
-  
-  if NumPointError <0
-      
-      [~,StartPointIndex] = min(abs(PassZeroIndex-abs(NumPointError/2)));
-      [~,EndPointIndex] = min(abs(CurrentPoint-PeakIndex-abs(NumPointError/2)));
-      
-      StartPoint = PassZeroIndex(StartPointIndex);
-      
-      EndPoint = PeakIndex(EndPointIndex);
-      
-      CurrentPoint = EndPoint-StartPoint+1;
-      
-      DataAudio1 = DataAudio1(:,StartPoint:EndPoint);
-      
-  elseif NumPointError >0
-      
-      NumStartPadHalfCycle = round(NumPointError/2/PassZeroIndex(2));
-      
-      iHalfCycle = 1: NumStartPadHalfCycle;
-      
-      SignCycle = (-1).^(NumStartPadHalfCycle -iHalfCycle+1);
-      
-      SignPoint = reshape(repmat(SignCycle,PassZeroIndex(2),1),1,[]);
-      
-      DataStartPad = repmat(DataAudio1(:,1:PassZeroIndex(2)),1,NumStartPadHalfCycle).*repmat(SignPoint,2,1);
-      
-      NumEndPadCycle = round(NumPointError/2/(CurrentPoint-PeakIndex(end-1)+1));
-      
-      DataEndPad = repmat(DataAudio1(:,PeakIndex(end-1):CurrentPoint),1,NumEndPadCycle);
 
-      DataAudio1 = [DataStartPad,DataAudio1(:,1:CurrentPoint),DataEndPad];
-      CurrentPoint = CurrentPoint+size(DataStartPad,2)+size(DataEndPad,2);
-         
-      
-  end
+if NumPointError <0
+    
+    [~,StartPointIndex] = min(abs(PeakIndex-abs(NumPointError/2)));
+    [~,EndPointIndex] = min(abs(CurrentPoint-PeakIndex-abs(NumPointError/2)));
+    
+    StartPoint = PeakIndex(StartPointIndex);
+    
+    EndPoint = PeakIndex(EndPointIndex);
+    
+    DataAudio1 = DataAudio1(:,StartPoint:EndPoint);
+    
+elseif NumPointError >0
+    
+    NumStartPadCycle = round(NumPointError/2/PeakIndex(2));
+    
+    DataStartPad = repmat(DataAudio1(:,1:PeakIndex(2)),1,NumStartPadCycle);
+    
+    NumEndPadCycle = round(NumPointError/2/(CurrentPoint-PeakIndex(end-1)+1));
+    
+    DataEndPad = repmat(DataAudio1(:,PeakIndex(end-1):CurrentPoint),1,NumEndPadCycle);
+    
+    DataAudio1 = [DataStartPad,DataAudio1(:,1:CurrentPoint),DataEndPad];
+ 
+end
 %段2 _
 LengthSeg = 0.8;
 
@@ -229,17 +197,57 @@ EndY = 0.5 - LengthSeg/2;
 RightAmp =  StartX;
 LeftAmp = 1 - RightAmp;
 
-
-
-
-DataAudio3(1,:) = DataAudio1(1,end:-1:1)/(1-0.5 - LengthSeg/2)*LeftAmp;
+DataAudio3(1,:) = DataAudio1(1,end:-1:1)/(1-(0.5 - LengthSeg/2))*LeftAmp;
 DataAudio3(2,:) = DataAudio1(2,end:-1:1)/(0.5 - LengthSeg/2)*RightAmp;
 
-
+%组合
 DataAudio = [DataAudio1,DataAudio2,DataAudio3];
 
+NumPointError = NumPointSum- size(DataAudio,2);
+
+if NumPointError<0
+    NumPointError = -1* NumPointError;
+    if mod (NumPointError-NumPointSum,2)==1
+        DataAudio = DataAudio(:,ceil(NumPointError/2)+1:end-fix(NumPointError/2));
+    else
+        DataAudio = DataAudio(:,NumPointError/2+1:end-NumPointError/2);
+    end
+elseif NumPointError>0
+    
+     if mod (NumPointError-NumPointSum,2)==1
+        DataAudio = [zeros(2,ceil(NumPointError/2)),DataAudio,zeros(2,fix(NumPointError/2))];
+    else
+        DataAudio = [zeros(2,NumPointError/2),DataAudio,zeros(2,NumPointError/2)];
+    end
+ 
+end
 
 
 
+%淡入淡出
+NumPointFadeIn = 1000;
+
+NumPointFadeOut = 1000;
+
+t = (-1*round(NumPointFadeIn):-1)/AudioSampleRate;
+
+f = AudioSampleRate/(2*NumPointFadeIn);
+
+AmpFadeIn = (cos(2*pi*f*t)+1)/2;
+
+t = (1:round(NumPointFadeOut))/AudioSampleRate;
+
+f = AudioSampleRate/(2*NumPointFadeOut);
+
+AmpFadeOut = (cos(2*pi*f*t)+1)/2;
 
 
+DataAudio(:,1:NumPointFadeIn)=DataAudio(:,1:NumPointFadeIn).*repmat(AmpFadeIn,2,1);
+
+
+DataAudio(:,end-NumPointFadeIn+1:end)=DataAudio(:,end-NumPointFadeIn+1:end).*repmat(AmpFadeOut,2,1);
+
+save Sound1.mat DataAudio AudioSampleRate;
+
+
+sound(DataAudio,AudioSampleRate);
