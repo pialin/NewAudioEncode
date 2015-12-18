@@ -145,7 +145,7 @@ LengthSeg = 0.8;
 
 TimeSeg = TimeSum/3;
 
-NumSegPoint = round(TimeSum/3 * AudioSampleRate);
+NumSegPoint = round(TimeSeg * AudioSampleRate);
 
 
 StartX =  0.5 - LengthSeg/2 ;
