@@ -1,5 +1,5 @@
 clear;
-%Sound of U
+%Sound of "n"
 MelMin =  100;
 MelMax = 1500;
 
@@ -30,10 +30,10 @@ NumSegPoint = round(TimeSeg *AudioSampleRate);
 
 
 StartX =  0.5 - LengthSeg/2 ;
-StartY =  0.5 + LengthSeg/2 ;
+StartY =  0.5 - LengthSeg/2 ;
 
 EndX =  0.5 - LengthSeg/2 ;
-EndY =  0.5 - LengthSeg/2 ;
+EndY =  0.5 + LengthSeg/2 ;
 
 NumDot = ceil(LengthSeg/GapWidth) + 1;
 
@@ -70,11 +70,10 @@ DataAudio1 =zeros(2,ceil(TimeSeg*AudioSampleRate));
 for iDot = 1:NumDot - 1
     
     DataChirp = chirp((0:SeqNumDotPoint(iDot)+NumPadPoint)/AudioSampleRate,SeqFreq(iDot),(SeqNumDotPoint(iDot)-1)/AudioSampleRate,SeqFreq(iDot+1),'logarithmic');
-
+    
+    EndPoint = SeqNumDotPoint(iDot);
+    
     if mod(iDot,2) == 0 %偶数段结尾截短至1
-        
-        EndPoint = SeqNumDotPoint(iDot);
-        
 
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
@@ -83,9 +82,7 @@ for iDot = 1:NumDot - 1
 
     elseif mod(iDot,2) == 1 %奇数段结尾延长至1
         
-        EndPoint = SeqNumDotPoint(iDot);
-        
-
+   
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
             EndPoint = EndPoint + 1;
@@ -149,10 +146,10 @@ NumSegPoint = round(TimeSum/3 * AudioSampleRate);
 
 
 StartX =  0.5 - LengthSeg/2 ;
-StartY =  0.5 - LengthSeg/2 ;
+StartY =  0.5 + LengthSeg/2 ;
 
 EndX =  0.5 + LengthSeg/2 ;
-EndY =  0.5 - LengthSeg/2 ;
+EndY =  0.5 + LengthSeg/2 ;
 
 
 MelAll = MelMin+StartY*(MelMax - MelMin);
@@ -189,10 +186,10 @@ LengthSeg = 0.8;
 TimeSeg = TimeSum/3;
 
 StartX = 0.5 + LengthSeg/2;
-StartY = 0.5 - LengthSeg/2;
+StartY = 0.5 + LengthSeg/2;
 
 EndX = 0.5 + LengthSeg/2;
-EndY = 0.5 + LengthSeg/2;
+EndY = 0.5 - LengthSeg/2;
 
 RightAmp =  StartX;
 LeftAmp = 1 - RightAmp;
@@ -247,7 +244,7 @@ DataAudio(:,1:NumPointFadeIn)=DataAudio(:,1:NumPointFadeIn).*repmat(AmpFadeIn,2,
 
 DataAudio(:,end-NumPointFadeIn+1:end)=DataAudio(:,end-NumPointFadeIn+1:end).*repmat(AmpFadeOut,2,1);
 
-save Sound1.mat DataAudio AudioSampleRate;
+save Sound2.mat DataAudio AudioSampleRate;
 
 
 sound(DataAudio,AudioSampleRate);
