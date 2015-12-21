@@ -1,5 +1,5 @@
 clear;
-%Sound of "n"
+%Sound of "]"
 MelMin =  100;
 MelMax = 1500;
 
@@ -19,7 +19,53 @@ NumPadPoint = ceil (1/FreqMin * AudioSampleRate);
 
 CurrentPoint = 0;
 
-%¶Î1 |
+%¶Î1 ¡ª
+LengthSeg = LengthSum/3;
+
+TimeSeg = LengthSeg * CoefLen2Time;
+
+NumSegPoint = round(TimeSeg* AudioSampleRate);
+
+
+StartX =  0.5 + LengthSeg/2 ;
+StartY =  0.5 + LengthSeg/2 ;
+
+EndX =  0.5 - LengthSeg/2 ;
+EndY =  0.5 + LengthSeg/2 ;
+
+
+MelAll = MelMin+StartY*(MelMax - MelMin);
+
+FreqAll = 700*exp(MelAll/1127-1);
+
+
+t = (0:NumSegPoint+NumPadPoint)/AudioSampleRate;
+
+TempData = cos(2*pi*FreqAll*t);
+
+iPoint = 2:NumSegPoint+NumPadPoint-1;
+
+PeakIndex = [true,TempData(iPoint)>= TempData(iPoint-1) & TempData(iPoint)>= TempData(iPoint+1)];
+
+PeakIndex = find(PeakIndex);
+
+[~,EndPointIndex] = min(abs(PeakIndex-NumSegPoint));
+EndPoint = PeakIndex(EndPointIndex);
+
+SeqRightAmp = linspace(StartX,EndX,EndPoint);
+
+SeqLeftAmp = 1 - SeqRightAmp;
+
+
+TempData = TempData(1:EndPoint);
+
+DataAudio1 = [TempData(1:EndPoint).*SeqLeftAmp;TempData(1:EndPoint).*SeqRightAmp];
+
+
+
+
+
+%¶Î2 |
 LengthSeg = LengthSum/3;
 
 
@@ -30,10 +76,10 @@ NumSegPoint = round(TimeSeg *AudioSampleRate);
 
 
 StartX =  0.5 - LengthSeg/2 ;
-StartY =  0.5 - LengthSeg/2 ;
+StartY =  0.5 + LengthSeg/2 ;
 
 EndX =  0.5 - LengthSeg/2 ;
-EndY =  0.5 + LengthSeg/2 ;
+EndY =  0.5 - LengthSeg/2 ;
 
 NumDot = ceil(LengthSeg/GapWidth) + 1;
 
@@ -64,7 +110,7 @@ SeqFreq = 700*exp(SeqMel/1127-1);
 
 SeqRightAmp = SeqX;
 
-DataAudio1 =zeros(2,ceil(TimeSeg*AudioSampleRate));
+DataAudio2 =zeros(2,ceil(TimeSeg*AudioSampleRate));
 
 
 for iDot = 1:NumDot - 1
@@ -94,8 +140,8 @@ for iDot = 1:NumDot - 1
     AmpRight = linspace(SeqRightAmp(iDot),SeqRightAmp(iDot+1),EndPoint);
     AmpLeft = 1 - AmpRight;
     
-    DataAudio1(1,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpLeft;
-    DataAudio1(2,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpRight;
+    DataAudio2(1,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpLeft;
+    DataAudio2(2,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpRight;
     
     CurrentPoint = CurrentPoint+EndPoint;
 
@@ -108,7 +154,7 @@ NumPointError = NumSegPoint - CurrentPoint;
 
 iPoint = 2:CurrentPoint-1;
 
-PeakIndex = [true,DataAudio1(1,iPoint)>= DataAudio1(1,iPoint-1) & DataAudio1(1,iPoint)>= DataAudio1(1,iPoint+1),true];
+PeakIndex = [true,DataAudio2(1,iPoint)>= DataAudio2(1,iPoint-1) & DataAudio2(1,iPoint)>= DataAudio2(1,iPoint+1),true];
 
 PeakIndex = find(PeakIndex);
 
@@ -122,34 +168,37 @@ if NumPointError <0
     
     EndPoint = PeakIndex(EndPointIndex);
     
-    DataAudio1 = DataAudio1(:,StartPoint:EndPoint);
+    DataAudio2 = DataAudio2(:,StartPoint:EndPoint);
     
 elseif NumPointError >0
     
     NumStartPadCycle = round(NumPointError/2/(PeakIndex(2)-1));
     
-    DataStartPad = repmat(DataAudio1(:,1:(PeakIndex(2)-1)),1,NumStartPadCycle);
+    DataStartPad = repmat(DataAudio2(:,1:(PeakIndex(2)-1)),1,NumStartPadCycle);
     
     NumEndPadCycle = round(NumPointError/2/(CurrentPoint-PeakIndex(end-1)));
     
-    DataEndPad = repmat(DataAudio1(:,(PeakIndex(end-1)+1):CurrentPoint),1,NumEndPadCycle);
+    DataEndPad = repmat(DataAudio2(:,(PeakIndex(end-1)+1):CurrentPoint),1,NumEndPadCycle);
     
-    DataAudio1 = [DataStartPad,DataAudio1(:,1:CurrentPoint),DataEndPad];
+    DataAudio2 = [DataStartPad,DataAudio2(:,1:CurrentPoint),DataEndPad];
  
 end
-%¶Î2 _
+
+
+
+%¶Î3  _
 LengthSeg = LengthSum/3;
 
 TimeSeg = LengthSeg * CoefLen2Time;
 
-NumSegPoint = round(TimeSeg * AudioSampleRate);
+NumSegPoint = round(TimeSeg* AudioSampleRate);
 
 
 StartX =  0.5 - LengthSeg/2 ;
-StartY =  0.5 + LengthSeg/2 ;
+StartY =  0.5 - LengthSeg/2 ;
 
 EndX =  0.5 + LengthSeg/2 ;
-EndY =  0.5 + LengthSeg/2 ;
+EndY =  0.5 - LengthSeg/2 ;
 
 
 MelAll = MelMin+StartY*(MelMax - MelMin);
@@ -177,25 +226,7 @@ SeqLeftAmp = 1 - SeqRightAmp;
 
 TempData = TempData(1:EndPoint);
 
-DataAudio2 = [TempData(1:EndPoint).*SeqLeftAmp;TempData(1:EndPoint).*SeqRightAmp];
-
-
-%¶Î3  |
-LengthSeg = LengthSum/3;
-
-TimeSeg = LengthSeg * CoefLen2Time;
-
-StartX = 0.5 + LengthSeg/2;
-StartY = 0.5 + LengthSeg/2;
-
-EndX = 0.5 + LengthSeg/2;
-EndY = 0.5 - LengthSeg/2;
-
-RightAmp =  StartX;
-LeftAmp = 1 - RightAmp;
-
-DataAudio3(1,:) = DataAudio1(1,end:-1:1)/(1-(0.5 - LengthSeg/2))*LeftAmp;
-DataAudio3(2,:) = DataAudio1(2,end:-1:1)/(0.5 - LengthSeg/2)*RightAmp;
+DataAudio3 = [TempData(1:EndPoint).*SeqLeftAmp;TempData(1:EndPoint).*SeqRightAmp];
 
 %×éºÏ
 DataAudio = [DataAudio1,DataAudio2,DataAudio3];
@@ -244,7 +275,7 @@ DataAudio(:,1:NumPointFadeIn)=DataAudio(:,1:NumPointFadeIn).*repmat(AmpFadeIn,2,
 
 DataAudio(:,end-NumPointFadeIn+1:end)=DataAudio(:,end-NumPointFadeIn+1:end).*repmat(AmpFadeOut,2,1);
 
-save Sound2.mat DataAudio AudioSampleRate;
+save Sound3.mat DataAudio AudioSampleRate;
 
 
 sound(DataAudio,AudioSampleRate);

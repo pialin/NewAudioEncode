@@ -20,9 +20,9 @@ NumPadPoint = ceil (1/FreqMin * AudioSampleRate);
 CurrentPoint = 0;
 
 %¶Î1 ¡ª
-LengthSeg = 0.8;
+LengthSeg = LengthSum/3;
 
-TimeSeg = TimeSum/3;
+TimeSeg = LengthSeg * CoefLen2Time;
 
 NumSegPoint = round(TimeSeg* AudioSampleRate);
 
@@ -66,7 +66,7 @@ DataAudio1 = [TempData(1:EndPoint).*SeqLeftAmp;TempData(1:EndPoint).*SeqRightAmp
 
 
 %¶Î2 |
-LengthSeg = 0.8;
+LengthSeg = LengthSum/3;
 
 
 TimeSeg = LengthSeg * CoefLen2Time;
@@ -187,9 +187,9 @@ end
 
 
 %¶Î3  _
-LengthSeg = 0.8;
+LengthSeg = LengthSum/3;
 
-TimeSeg = TimeSum/3;
+TimeSeg = LengthSeg * CoefLen2Time;
 
 NumSegPoint = round(TimeSeg* AudioSampleRate);
 
