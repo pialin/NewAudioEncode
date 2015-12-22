@@ -17,7 +17,11 @@ GapWidth = 0.01;
 FreqMin = 700*exp(MelMin/1127-1);
 NumPadPoint = ceil (1/FreqMin * AudioSampleRate);
 
-SegPoint = 0; 
+NumSeg = 5;
+
+SegPoint = ones(NumSeg,1);
+
+iSeg = 1;
 
 
 
@@ -43,7 +47,7 @@ SeqX = ones(1,NumDot)*StartX ;
 
 if StartY <= EndY
     
-    SeqY = StartY:GapWidth:EndY;  
+    SeqY = StartY:GapWidth:EndY;
     
 else
     
@@ -67,7 +71,7 @@ SeqFreq = 700*exp(SeqMel/1127-1);
 SeqRightAmp = SeqX;
 
 DataTemp =zeros(2,ceil(TimeSeg*AudioSampleRate));
-CurrentPoint = 0;
+CurrentPoint = 1;
 
 for iDot = 1:NumDot - 1
     
@@ -76,39 +80,39 @@ for iDot = 1:NumDot - 1
     EndPoint = SeqNumDotPoint(iDot);
     
     if mod(iDot,2) == 0 %偶数段结尾截短至1
-
+        
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
             EndPoint = EndPoint - 1;
         end
-
+        
     elseif mod(iDot,2) == 1 %奇数段结尾延长至1
         
-   
+        
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
             EndPoint = EndPoint + 1;
         end
-   
+        
     end
     
     
     AmpRight = linspace(SeqRightAmp(iDot),SeqRightAmp(iDot+1),EndPoint);
     AmpLeft = 1 - AmpRight;
     
-    DataTemp(1,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpLeft;
-    DataTemp(2,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpRight;
+    DataTemp(1,CurrentPoint:CurrentPoint+EndPoint-1) = DataChirp(1:EndPoint).*AmpLeft;
+    DataTemp(2,CurrentPoint:CurrentPoint+EndPoint-1) = DataChirp(1:EndPoint).*AmpRight;
     
     CurrentPoint = CurrentPoint+EndPoint;
-
+    
 end
 
 
 
 %增删Seg数据
-NumPointError = NumSegPoint - CurrentPoint;
+NumPointError = NumSegPoint - CurrentPoint+1;
 
-iPoint = 2:CurrentPoint-1;
+iPoint = 2:CurrentPoint-2;
 
 PeakIndex = [true,DataTemp(1,iPoint)>= DataTemp(1,iPoint-1) & DataTemp(1,iPoint)>= DataTemp(1,iPoint+1),true];
 
@@ -118,7 +122,7 @@ PeakIndex = find(PeakIndex);
 if NumPointError <0
     
     [~,StartPointIndex] = min(abs(PeakIndex-abs(NumPointError/2)));
-    [~,EndPointIndex] = min(abs(CurrentPoint-PeakIndex-abs(NumPointError/2)));
+    [~,EndPointIndex] = min(abs(CurrentPoint-1-PeakIndex-abs(NumPointError/2)));
     
     StartPoint = PeakIndex(StartPointIndex);
     
@@ -132,18 +136,20 @@ elseif NumPointError >0
     
     DataStartPad = repmat(DataTemp(:,1:(PeakIndex(2)-1)),1,NumStartPadCycle);
     
-    NumEndPadCycle = round(NumPointError/2/(CurrentPoint-PeakIndex(end-1)));
+    NumEndPadCycle = round(NumPointError/2/(CurrentPoint-1-PeakIndex(end-1)));
     
-    DataEndPad = repmat(DataTemp(:,(PeakIndex(end-1)+1):CurrentPoint),1,NumEndPadCycle);
+    DataEndPad = repmat(DataTemp(:,(PeakIndex(end-1)+1):CurrentPoint-1),1,NumEndPadCycle);
     
-    DataTemp = [DataStartPad,DataTemp(:,1:CurrentPoint),DataEndPad];
- 
+    DataTemp = [DataStartPad,DataTemp(:,1:CurrentPoint-1),DataEndPad];
+    
 end
 
 
-DataAudio(:,SegPoint+1:SegPoint + size(DataTemp,2)) = DataTemp;
+DataAudio(:,SegPoint(iSeg):SegPoint(iSeg) + size(DataTemp,2)-1) = DataTemp;
 
-SegPoint = SegPoint + size(DataTemp,2);
+SegPoint(iSeg+1) = SegPoint(iSeg) + size(DataTemp,2);
+
+iSeg = iSeg + 1;
 
 
 %%
@@ -184,14 +190,13 @@ SeqRightAmp = linspace(StartX,EndX,EndPoint);
 
 SeqLeftAmp = 1 - SeqRightAmp;
 
+DataTemp = repmat(DataTemp(1:EndPoint),2,1).*[SeqLeftAmp;SeqRightAmp];
 
-DataTemp = repmat(DataTemp(1:EndPoint),2,1);
+DataAudio(:,SegPoint(iSeg):SegPoint(iSeg) + size(DataTemp,2)-1) = DataTemp;
 
-DataTemp = DataTemp.*[SeqLeftAmp;SeqRightAmp];
+SegPoint(iSeg+1) = SegPoint(iSeg) + size(DataTemp,2);
 
-DataAudio(:,SegPoint+1:SegPoint + size(DataTemp,2)) = DataTemp;
-
-SegPoint = SegPoint + size(DataTemp,2);
+iSeg = iSeg + 1;
 
 %%
 %段3  |
@@ -215,7 +220,7 @@ SeqX = ones(1,NumDot)*StartX ;
 
 if StartY <= EndY
     
-    SeqY = StartY:GapWidth:EndY;  
+    SeqY = StartY:GapWidth:EndY;
     
 else
     
@@ -239,7 +244,7 @@ SeqFreq = 700*exp(SeqMel/1127-1);
 SeqRightAmp = SeqX;
 
 DataTemp =zeros(2,ceil(TimeSeg*AudioSampleRate));
-CurrentPoint = 0;
+CurrentPoint = 1;
 
 for iDot = 1:NumDot - 1
     
@@ -248,39 +253,39 @@ for iDot = 1:NumDot - 1
     EndPoint = SeqNumDotPoint(iDot);
     
     if mod(iDot,2) == 0 %偶数段结尾截短至1
-
+        
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
             EndPoint = EndPoint - 1;
         end
-
+        
     elseif mod(iDot,2) == 1 %奇数段结尾延长至1
         
-   
+        
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
             EndPoint = EndPoint + 1;
         end
-   
+        
     end
     
     
     AmpRight = linspace(SeqRightAmp(iDot),SeqRightAmp(iDot+1),EndPoint);
     AmpLeft = 1 - AmpRight;
     
-    DataTemp(1,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpLeft;
-    DataTemp(2,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpRight;
+    DataTemp(1,CurrentPoint:CurrentPoint+EndPoint-1) = DataChirp(1:EndPoint).*AmpLeft;
+    DataTemp(2,CurrentPoint:CurrentPoint+EndPoint-1) = DataChirp(1:EndPoint).*AmpRight;
     
     CurrentPoint = CurrentPoint+EndPoint;
-
+    
 end
 
 
 
 %增删Seg数据
-NumPointError = NumSegPoint - CurrentPoint;
+NumPointError = NumSegPoint - CurrentPoint+1;
 
-iPoint = 2:CurrentPoint-1;
+iPoint = 2:CurrentPoint-2;
 
 PeakIndex = [true,DataTemp(1,iPoint)>= DataTemp(1,iPoint-1) & DataTemp(1,iPoint)>= DataTemp(1,iPoint+1),true];
 
@@ -290,7 +295,7 @@ PeakIndex = find(PeakIndex);
 if NumPointError <0
     
     [~,StartPointIndex] = min(abs(PeakIndex-abs(NumPointError/2)));
-    [~,EndPointIndex] = min(abs(CurrentPoint-PeakIndex-abs(NumPointError/2)));
+    [~,EndPointIndex] = min(abs(CurrentPoint-1-PeakIndex-abs(NumPointError/2)));
     
     StartPoint = PeakIndex(StartPointIndex);
     
@@ -304,17 +309,19 @@ elseif NumPointError >0
     
     DataStartPad = repmat(DataTemp(:,1:(PeakIndex(2)-1)),1,NumStartPadCycle);
     
-    NumEndPadCycle = round(NumPointError/2/(CurrentPoint-PeakIndex(end-1)));
+    NumEndPadCycle = round(NumPointError/2/(CurrentPoint-1-PeakIndex(end-1)));
     
-    DataEndPad = repmat(DataTemp(:,(PeakIndex(end-1)+1):CurrentPoint),1,NumEndPadCycle);
+    DataEndPad = repmat(DataTemp(:,(PeakIndex(end-1)+1):CurrentPoint-1),1,NumEndPadCycle);
     
-    DataTemp = [DataStartPad,DataTemp(:,1:CurrentPoint),DataEndPad];
- 
+    DataTemp = [DataStartPad,DataTemp(:,1:CurrentPoint-1),DataEndPad];
+    
 end
 
-DataAudio(:,SegPoint+1:SegPoint + size(DataTemp,2)) = DataTemp;
+DataAudio(:,SegPoint(iSeg):SegPoint(iSeg) + size(DataTemp,2)-1) = DataTemp;
 
-SegPoint = SegPoint + size(DataTemp,2);
+SegPoint(iSeg+1) = SegPoint(iSeg) + size(DataTemp,2);
+
+iSeg = iSeg + 1;
 
 %%
 %段4 _
@@ -357,9 +364,11 @@ SeqLeftAmp = 1 - SeqRightAmp;
 
 DataTemp =  repmat(DataTemp(1:EndPoint),2,1).*[SeqLeftAmp;SeqRightAmp];
 
-DataAudio(:,SegPoint+1:SegPoint + size(DataTemp,2)) = DataTemp;
+DataAudio(:,SegPoint(iSeg):SegPoint(iSeg) + size(DataTemp,2)-1) = DataTemp;
 
-SegPoint = SegPoint + size(DataTemp,2);
+SegPoint(iSeg+1) = SegPoint(iSeg) + size(DataTemp,2);
+
+iSeg = iSeg + 1;
 
 %%
 %段5 |
@@ -384,7 +393,7 @@ SeqX = ones(1,NumDot)*StartX ;
 
 if StartY <= EndY
     
-    SeqY = StartY:GapWidth:EndY;  
+    SeqY = StartY:GapWidth:EndY;
     
 else
     
@@ -409,7 +418,7 @@ SeqRightAmp = SeqX;
 
 DataTemp =zeros(2,ceil(TimeSeg*AudioSampleRate));
 
-CurrentPoint = 0;
+CurrentPoint = 1;
 
 for iDot = 1:NumDot - 1
     
@@ -418,39 +427,39 @@ for iDot = 1:NumDot - 1
     EndPoint = SeqNumDotPoint(iDot);
     
     if mod(iDot,2) == 0 %偶数段结尾截短至1
-
+        
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
             EndPoint = EndPoint - 1;
         end
-
+        
     elseif mod(iDot,2) == 1 %奇数段结尾延长至1
         
-   
+        
         while DataChirp(EndPoint)~= max(DataChirp(EndPoint-1:EndPoint+1))
             
             EndPoint = EndPoint + 1;
         end
-   
+        
     end
     
     
     AmpRight = linspace(SeqRightAmp(iDot),SeqRightAmp(iDot+1),EndPoint);
     AmpLeft = 1 - AmpRight;
     
-    DataTemp(1,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpLeft;
-    DataTemp(2,CurrentPoint+1:CurrentPoint+EndPoint) = DataChirp(1:EndPoint).*AmpRight;
+    DataTemp(1,CurrentPoint:CurrentPoint+EndPoint-1) = DataChirp(1:EndPoint).*AmpLeft;
+    DataTemp(2,CurrentPoint:CurrentPoint+EndPoint-1) = DataChirp(1:EndPoint).*AmpRight;
     
     CurrentPoint = CurrentPoint+EndPoint;
-
+    
 end
 
 
 
 %增删Seg数据
-NumPointError = NumSegPoint - CurrentPoint;
+NumPointError = NumSegPoint - CurrentPoint+1;
 
-iPoint = 2:CurrentPoint-1;
+iPoint = 2:CurrentPoint-2;
 
 PeakIndex = [true,DataTemp(1,iPoint)>= DataTemp(1,iPoint-1) & DataTemp(1,iPoint)>= DataTemp(1,iPoint+1),true];
 
@@ -460,7 +469,7 @@ PeakIndex = find(PeakIndex);
 if NumPointError <0
     
     [~,StartPointIndex] = min(abs(PeakIndex-abs(NumPointError/2)));
-    [~,EndPointIndex] = min(abs(CurrentPoint-PeakIndex-abs(NumPointError/2)));
+    [~,EndPointIndex] = min(abs(CurrentPoint-1-PeakIndex-abs(NumPointError/2)));
     
     StartPoint = PeakIndex(StartPointIndex);
     
@@ -474,22 +483,21 @@ elseif NumPointError >0
     
     DataStartPad = repmat(DataTemp(:,1:(PeakIndex(2)-1)),1,NumStartPadCycle);
     
-    NumEndPadCycle = round(NumPointError/2/(CurrentPoint-PeakIndex(end-1)));
+    NumEndPadCycle = round(NumPointError/2/(CurrentPoint-1-PeakIndex(end-1)));
     
-    DataEndPad = repmat(DataTemp(:,(PeakIndex(end-1)+1):CurrentPoint),1,NumEndPadCycle);
+    DataEndPad = repmat(DataTemp(:,(PeakIndex(end-1)+1):CurrentPoint-1),1,NumEndPadCycle);
     
-    DataTemp = [DataStartPad,DataTemp(:,1:CurrentPoint),DataEndPad];
- 
+    DataTemp = [DataStartPad,DataTemp(:,1:CurrentPoint-1),DataEndPad];
+    
 end
 
-DataAudio(:,SegPoint+1:SegPoint + size(DataTemp,2)) = DataTemp;
+DataAudio(:,SegPoint(iSeg):SegPoint(iSeg) + size(DataTemp,2)-1) = DataTemp;
 
-SegPoint = SegPoint + size(DataTemp,2);
 
 %%
 
 %长度调整
-NumPointError = NumPointSum- SegPoint;
+NumPointError = NumPointSum- (SegPoint(iSeg) + size(DataTemp,2)-1);
 
 if NumPointError<0
     NumPointError = abs(NumPointError);
@@ -500,12 +508,12 @@ if NumPointError<0
     end
 elseif NumPointError>0
     
-     if mod (NumPointError,2)==1
+    if mod (NumPointError,2)==1
         DataAudio = [zeros(2,ceil(NumPointError/2)),DataAudio,zeros(2,fix(NumPointError/2))];
     else
         DataAudio = [zeros(2,NumPointError/2),DataAudio,zeros(2,NumPointError/2)];
     end
- 
+    
 end
 
 
