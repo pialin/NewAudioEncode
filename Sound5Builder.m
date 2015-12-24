@@ -75,7 +75,7 @@ CurrentPoint = 1;
 
 for iDot = 1:NumDot - 1
     
-    DataChirp = chirp((0:SeqNumDotPoint(iDot)+NumPadPoint)/AudioSampleRate,SeqFreq(iDot),(SeqNumDotPoint(iDot)-1)/AudioSampleRate,SeqFreq(iDot+1),'logarithmic');
+    DataChirp = chirp((0:SeqNumDotPoint(iDot)+NumPadPoint)/AudioSampleRate,SeqFreq(iDot),(SeqNumDotPoint(iDot)-1)/AudioSampleRate,SeqFreq(iDot+1),'linear');
     
     EndPoint = SeqNumDotPoint(iDot);
     

@@ -189,7 +189,7 @@ end
 
 DataAudio = DataAudio(:,1:CurrentIndex);
 
-sound(DataAudio,SampleRateAudio);
+% sound(DataAudio,SampleRateAudio);
 
 HalfCircleSound = DataAudio;
 

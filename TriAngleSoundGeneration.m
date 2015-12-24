@@ -250,17 +250,10 @@ end
 
 DataAudio = DataAudio(:,1:CurrentIndex);
 
-sound(DataAudio,SampleRateAudio);
+% sound(DataAudio,SampleRateAudio);
 
 TriAngleSound = DataAudio;
 
 save TriAngleSound.mat TriAngleSound;
-
-
-
-
-
-
-
 
 

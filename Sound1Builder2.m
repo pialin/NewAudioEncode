@@ -10,46 +10,118 @@ TimeSum = 3;
 
 CoefLen2Time = TimeSum/LengthSum;
 
-NumPointSum = round(TimeSum*AudioSampleRate);
+NumSumPoint = round(TimeSum*AudioSampleRate);
 
-FreqMin = 700*exp(MelMin/1127-1);
-NumPadPoint = ceil (1/FreqMin * AudioSampleRate);
 
-DataAudio = zeros(2,NumPointSum);
 
+DataAudio = zeros(2,NumSumPoint);
+
+t = zeros(1,NumSumPoint);
+
+x = zeros(1,NumSumPoint);
+
+y = zeros(1,NumSumPoint);
+
+mel = zeros(1,NumSumPoint);
+
+f = zeros(1,NumSumPoint);
+
+AmpL = zeros(1,NumSumPoint);
+
+AmpR = zeros(1,NumSumPoint);
 
 NumSeg = 3;
 
-SegPoint = ones(NumSeg,1);
+LengthSeg = zeros(1,NumSeg);
+
+TimeSeg = zeros(1,NumSeg);
+
+NumSegPoint = zeros(1,NumSeg);
+
+SegStartX = zeros(1,NumSeg);
+
+SegEndX = zeros(1,NumSeg);
+
+SegStartY = zeros(1,NumSeg);
+
+SegEndY = zeros(1,NumSeg);
+
+SegStartPoint = zeros(1,NumSeg);
+
 
 iSeg = 1;
+SegStartPoint(iSeg) = 1;
 
 %段1 |
-LengthSeg = LengthSum/3;
+LengthSeg(iSeg) = LengthSum/3;
 
 
-TimeSeg = LengthSeg * CoefLen2Time;
+TimeSeg(iSeg) = LengthSeg * CoefLen2Time;
 
-NumSegPoint = round(TimeSeg *AudioSampleRate);
+NumSegPoint(iSeg) = round(TimeSeg(iSeg) *AudioSampleRate);
+
+SegStartPoint(iSeg +1) = SegStartPoint(iSeg) + NumSegPoint(iSeg);
+
+SegStartX(iSeg) =  0.5 - LengthSeg(iSeg)/2 ;
+SegStartY(iSeg) =  0.5 + LengthSeg(iSeg)/2 ;
+
+SegEndX(iSeg) =  0.5 - LengthSeg(iSeg)/2 ;
+SegEndY(iSeg) =  0.5 - LengthSeg(iSeg)/2 ;
+
+x(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = linspace(SegStartX(iSeg),SegEndX(iSeg),NumSegPoint(iSeg));
+
+y(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = linspace(SegStartY(iSeg),SegEndY(iSeg),NumSegPoint(iSeg));
+
+iSeg = iSeg + 1;
+%段2 -
+LengthSeg(iSeg) = LengthSum/3;
+
+
+TimeSeg(iSeg) = LengthSeg * CoefLen2Time;
+
+NumSegPoint(iSeg) = round(TimeSeg(iSeg) *AudioSampleRate);
+
+SegStartPoint(iSeg +1) = SegStartPoint(iSeg) + NumSegPoint(iSeg);
+
+SegStartX(iSeg) =  0.5 - LengthSeg(iSeg)/2 ;
+SegStartY(iSeg) =  0.5 - LengthSeg(iSeg)/2 ;
+
+SegEndX(iSeg) =  0.5 + LengthSeg(iSeg)/2 ;
+SegEndY(iSeg) =  0.5 - LengthSeg(iSeg)/2 ;
+
+x(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = linspace(SegStartX(iSeg),SegEndX(iSeg),NumSegPoint(iSeg));
+
+y(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = linspace(SegStartY(iSeg),SegEndY(iSeg),NumSegPoint(iSeg));
+
+iSeg = iSeg + 1;
+%段2 -
+LengthSeg(iSeg) = LengthSum/3;
+
+
+TimeSeg(iSeg) = LengthSeg * CoefLen2Time;
+
+NumSegPoint(iSeg) = round(TimeSeg(iSeg) *AudioSampleRate);
+
+
+SegStartX(iSeg) =  0.5 + LengthSeg(iSeg)/2 ;
+SegStartY(iSeg) =  0.5 - LengthSeg(iSeg)/2 ;
+
+SegEndX(iSeg) =  0.5 + LengthSeg(iSeg)/2 ;
+SegEndY(iSeg) =  0.5 + LengthSeg(iSeg)/2 ;
+
+x(SegStartPoint(iSeg):NumSumPoint) = linspace(SegStartX(iSeg),SegEndX(iSeg),NumSegPoint(iSeg));
+
+y(SegStartPoint(iSeg):NumSumPoint) = linspace(SegStartY(iSeg),SegEndY(iSeg),NumSegPoint(iSeg));
 
 
 
-StartX =  0.5 - LengthSeg/2 ;
-StartY =  0.5 + LengthSeg/2 ;
-
-EndX =  0.5 - LengthSeg/2 ;
-EndY =  0.5 - LengthSeg/2 ;
-
-x = linspace(StartX,EndX,NumSegPoint);
-
-x = [x,ones(1,NumPadPoint)*EndX];
-
-y = linspace(StartY,EndY,NumSegPoint);
-
-y = [y,ones(1,NumPadPoint)*EndY];
 
 
-mel = MelMin+y*(MelMax - MelMin);
+
+
+
+
+
 
 f = 700*exp(mel/1127-1);
 
@@ -155,7 +227,7 @@ DataTemp(2,:) = DataAudio(2,SegPoint(2)-1:-1:SegPoint(1))/(max(abs(DataAudio(2,S
 DataAudio(:,SegPoint(iSeg):SegPoint(iSeg) + size(DataTemp,2)-1) = DataTemp;
 
 %调整长度
-NumPointError = NumPointSum- (SegPoint(iSeg) + size(DataTemp,2)-1);
+NumPointError = NumSumPoint- (SegPoint(iSeg) + size(DataTemp,2)-1);
 
 if NumPointError<0
     NumPointError = abs(NumPointError);
