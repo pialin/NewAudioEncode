@@ -13,22 +13,10 @@ CoefLen2Time = TimeSum/LengthSum;
 NumSumPoint = round(TimeSum*AudioSampleRate);
 
 
-
-DataAudio = zeros(2,NumSumPoint);
-
-t = zeros(1,NumSumPoint);
-
 x = zeros(1,NumSumPoint);
 
 y = zeros(1,NumSumPoint);
 
-mel = zeros(1,NumSumPoint);
-
-f = zeros(1,NumSumPoint);
-
-AmpL = zeros(1,NumSumPoint);
-
-AmpR = zeros(1,NumSumPoint);
 
 NumSeg = 3;
 
@@ -56,7 +44,7 @@ SegStartPoint(iSeg) = 1;
 LengthSeg(iSeg) = LengthSum/3;
 
 
-TimeSeg(iSeg) = LengthSeg * CoefLen2Time;
+TimeSeg(iSeg) = LengthSeg(iSeg) * CoefLen2Time;
 
 NumSegPoint(iSeg) = round(TimeSeg(iSeg) *AudioSampleRate);
 
@@ -77,7 +65,7 @@ iSeg = iSeg + 1;
 LengthSeg(iSeg) = LengthSum/3;
 
 
-TimeSeg(iSeg) = LengthSeg * CoefLen2Time;
+TimeSeg(iSeg) = LengthSeg(iSeg) * CoefLen2Time;
 
 NumSegPoint(iSeg) = round(TimeSeg(iSeg) *AudioSampleRate);
 
@@ -93,12 +81,14 @@ x(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = linspace(SegStartX(iSeg),SegEnd
 
 y(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = linspace(SegStartY(iSeg),SegEndY(iSeg),NumSegPoint(iSeg));
 
+
+
 iSeg = iSeg + 1;
-%段2 -
+%段3 |
 LengthSeg(iSeg) = LengthSum/3;
 
 
-TimeSeg(iSeg) = LengthSeg * CoefLen2Time;
+TimeSeg(iSeg) = LengthSeg(iSeg) * CoefLen2Time;
 
 NumSegPoint(iSeg) = round(TimeSeg(iSeg) *AudioSampleRate);
 
@@ -113,15 +103,9 @@ x(SegStartPoint(iSeg):NumSumPoint) = linspace(SegStartX(iSeg),SegEndX(iSeg),NumS
 
 y(SegStartPoint(iSeg):NumSumPoint) = linspace(SegStartY(iSeg),SegEndY(iSeg),NumSegPoint(iSeg));
 
+t = linspace(0,TimeSum,NumSumPoint);
 
-
-
-
-
-
-
-
-
+mel = MelMin+y*(MelMax - MelMin);
 
 f = 700*exp(mel/1127-1);
 
@@ -129,30 +113,10 @@ AmpR = x;
 
 AmpL = 1-x;
 
-t = (0:NumSegPoint+NumPadPoint-1)/AudioSampleRate;
+DataAudio = [AmpL;AmpR].*repmat(cos(2*pi*f.*t),2,1);
 
-DataTemp = [AmpL;AmpR].*repmat(cos(2*pi*f.*t),2,1);
 
-EndPoint = NumSegPoint;
 
-if mod(iSeg,2) == 0 %偶数段结尾截短至1
-    
-    while DataTemp(1,EndPoint)~= max(DataTemp(1,EndPoint-1:EndPoint+1))
-
-        EndPoint = EndPoint - 1;
-    end
-    
-
-elseif mod(iSeg,2) == 1 %奇数段结尾延长至1
-      
-    while DataTemp(1,EndPoint)~= max(DataTemp(1,EndPoint-1:EndPoint+1))
-        
-        EndPoint = EndPoint + 1;
-    end
-   
-end
-
-EndPoint = EndPoint -1;%左移一点
 
 DataAudio(:,SegPoint(iSeg):SegPoint(iSeg) + EndPoint-1) = DataTemp(:,1:EndPoint);
 
