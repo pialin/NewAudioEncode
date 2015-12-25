@@ -36,14 +36,14 @@ TimeSeg(iSeg) =  LenSeg(iSeg)*CoefLen2Time;
 NumSegPoint(iSeg) = round(TimeSeg(iSeg)*AudioSampleRate);
 SegStartPoint(iSeg+1) = SegStartPoint(iSeg) +NumSegPoint(iSeg);
 
-fi(iSeg) = subs(f,y,sym('0.9-c*t'));
+fi(iSeg) = subs(f,y,sym('0.1+c*t'));
 fi(iSeg) = subs(fi(iSeg),c,1/CoefLen2Time);
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
 AmpR(iSeg) = sym('0.1');
 AmpR(iSeg) = subs(AmpR(iSeg),c,1/CoefLen2Time);
 
-ValueIntf(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = ...
+ValueIntf(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = ...  
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))));
 ValueAmpR(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = ...
     double(subs(AmpR(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))));
@@ -56,7 +56,7 @@ TimeSeg(iSeg) =  LenSeg(iSeg)*CoefLen2Time;
 NumSegPoint(iSeg) = round(TimeSeg(iSeg)*AudioSampleRate);
 SegStartPoint(iSeg+1) = SegStartPoint(iSeg) +NumSegPoint(iSeg);
 
-fi(iSeg) = subs(f,y,sym('0.1'));
+fi(iSeg) = subs(f,y,sym('0.9'));
 fi(iSeg) = subs(fi(iSeg),c,1/CoefLen2Time);
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
@@ -76,15 +76,12 @@ LenSeg(iSeg) = LenSum/3;
 TimeSeg(iSeg) =  LenSeg(iSeg)*CoefLen2Time;
 NumSegPoint(iSeg) = round(TimeSeg(iSeg)*AudioSampleRate);
 
-
-fi(iSeg) = subs(f,y,sym('c*t+0.1'));
+fi(iSeg) = subs(f,y,sym('0.9-c*t'));
 fi(iSeg) = subs(fi(iSeg),c,1/CoefLen2Time);
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
 AmpR(iSeg) = sym('0.9');
 AmpR(iSeg) = subs(AmpR(iSeg),c,1/CoefLen2Time);
-
-
 
 ValueIntf(SegStartPoint(iSeg):end) = ...
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))))+ValueIntf(SegStartPoint(iSeg)-1);
@@ -125,5 +122,5 @@ DataAudio(:,end-NumPointFadeIn+1:end)=DataAudio(:,end-NumPointFadeIn+1:end).*rep
 
 sound(DataAudio,AudioSampleRate);
 
-Sound1 = DataAudio;
-save Sound1.mat Sound1 AudioSampleRate;
+Sound3 = DataAudio;
+save Sound3.mat Sound3 AudioSampleRate;
