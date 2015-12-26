@@ -1,6 +1,6 @@
-%Sound5 |-|_|
+%Sound6
 clear;
-syms mel y t f c;
+syms mel y t f kf ka;
 fi = sym('f',[3,1]);
 infi = sym('f',[3,1]);
 AmpR = sym('AmpR',[3,1]);
@@ -37,12 +37,12 @@ TimeSeg(iSeg) =  LenSeg(iSeg)*CoefLen2Time;
 NumSegPoint(iSeg) = round(TimeSeg(iSeg)*AudioSampleRate);
 SegStartPoint(iSeg+1) = SegStartPoint(iSeg) +NumSegPoint(iSeg);
 
-fi(iSeg) = subs(f,y,sym('0.9-c*t'));
-fi(iSeg) = subs(fi(iSeg),c,1/CoefLen2Time);
+fi(iSeg) = subs(f,y,sym('0.9-kf*t'));
+fi(iSeg) = subs(fi(iSeg),kf,1/CoefLen2Time);
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
 AmpR(iSeg) = sym('0.9');
-AmpR(iSeg) = subs(AmpR(iSeg),c,1/CoefLen2Time);
+AmpR(iSeg) = subs(AmpR(iSeg),ka,1/CoefLen2Time);
 
 ValueIntf(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = ...
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))));
@@ -58,11 +58,11 @@ NumSegPoint(iSeg) = round(TimeSeg(iSeg)*AudioSampleRate);
 SegStartPoint(iSeg+1) = SegStartPoint(iSeg) +NumSegPoint(iSeg);
 
 fi(iSeg) = subs(f,y,sym('0.5'));
-fi(iSeg) = subs(fi(iSeg),c,1/CoefLen2Time);
+fi(iSeg) = subs(fi(iSeg),kf,1/CoefLen2Time);
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
-AmpR(iSeg) = sym('0.9-c*t');
-AmpR(iSeg) = subs(AmpR(iSeg),c,1/CoefLen2Time);
+AmpR(iSeg) = sym('0.9-ka*t');
+AmpR(iSeg) = subs(AmpR(iSeg),ka,1/CoefLen2Time);
 
 ValueIntf(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = ...
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))))+ValueIntf(SegStartPoint(iSeg)-1);
@@ -77,12 +77,12 @@ LenSeg(iSeg) = LenSum/4;
 TimeSeg(iSeg) =  LenSeg(iSeg)*CoefLen2Time;
 NumSegPoint(iSeg) = round(TimeSeg(iSeg)*AudioSampleRate);
 
-fi(iSeg) = subs(f,y,sym('0.5-c*t'));
-fi(iSeg) = subs(fi(iSeg),c,1/CoefLen2Time);
+fi(iSeg) = subs(f,y,sym('0.5-kf*t'));
+fi(iSeg) = subs(fi(iSeg),kf,1/CoefLen2Time);
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
 AmpR(iSeg) = sym('0.1');
-AmpR(iSeg) = subs(AmpR(iSeg),c,1/CoefLen2Time);
+AmpR(iSeg) = subs(AmpR(iSeg),ka,1/CoefLen2Time);
 
 ValueIntf(SegStartPoint(iSeg):end) = ...
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))))+ValueIntf(SegStartPoint(iSeg)-1);
