@@ -19,7 +19,7 @@ PatternVertex(:,2) = OriginY - PatternVertex(:,2)*SizeCanvas;
 
 
 NumPolygon = [1,2,3];
-NumVertex  = [4,4];
+NumPolygonVertex = 4;
 ColorPolygon = white;
 
 
@@ -29,7 +29,7 @@ SegTime = SegLength/sum(SegLength)*SumTime;
 
 SegFrame = round(SegTime*FramePerSecond);
 
-PolygonVertex =  {zeros(4,2,SegFrame(1)),zeros(4,4,SegFrame(2)),zeros(4,6,SegFrame(3))};
+PolygonVertex =  {zeros(NumPolygonVertex,2,SegFrame(1)),zeros(4,4,SegFrame(2)),zeros(4,6,SegFrame(3))};
 
 
 iSeg = 1;
