@@ -69,14 +69,27 @@ try
     Screen('BlendFunction', PointerWindow, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     %等待帧数设定，后面用于保证准确的帧刷新时序
     FrameWait = 1;
+   
     
     vbl = Screen('Flip', PointerWindow);
-    for iPolygon = 1:numel(ColorPolygon);
+    
+    for iSeg =1:3
         
-        Screen('FillPoly',PointerWindow,ColorPolygon(iPolygon),PolygonVertex(:,:,iPolygon));
-
+        for iFrame = 1:SegFrame(iSeg)
+            
+            
+            for iPolygon = 1:NumPolygon(iSeg)
+                Screen('FillPoly',PointerWindow,white,PolyVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame));
+            end
+            
+            vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
+            
+            
+        end
+        
     end
-    vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
+    
+    
     WaitSecs(2);
     sca;
 
