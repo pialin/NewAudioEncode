@@ -73,25 +73,36 @@ try
     
     vbl = Screen('Flip', PointerWindow);
     
-    for iSeg =1:3
-        
-        for iFrame = 1:SegFrame(iSeg)
-            
-            
-            for iPolygon = 1:NumPolygon(iSeg)
-                Screen('FillPoly',PointerWindow,white,PolyVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame));
-            end
-            
-            vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
-            
-            
+%     for iSeg =1:2
+%         
+%         for iFrame = 1:SegFrame(iSeg)
+%             
+%             for iArc = 1:NumArc(iSeg)
+%                 
+%                 Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut(iArc,:),StartAngle(iArc),ArcAngle{iSeg}(iArc,iFrame));
+%                 Screen('FillArc',PointerWindow,ColorRoundIn,RectRoundIn(iArc,:),StartAngle(iArc),ArcAngle{iSeg}(iArc,iFrame));
+%                 
+%             end
+%            
+%             
+%             vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
+%         end
+%         
+%     end
+
+for iSeg =1:3
+    for iFrame = 1:SegFrame(iSeg)
+        for iPolygon = 1:NumPolygon(iSeg)
+            Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame));
         end
-        
+        vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
     end
-    
-    
-    WaitSecs(2);
-    sca;
+end
+
+
+
+WaitSecs(2);
+sca;
 
     
 %%

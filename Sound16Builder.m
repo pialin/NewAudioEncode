@@ -41,8 +41,8 @@ fi(iSeg) = subs(f,y,sym('0.5+kf*t'));
 fi(iSeg) = subs(fi(iSeg),kf,0.4/TimeSeg(iSeg));
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
-AmpR(iSeg) = sym('(1-2/5*sqrt(5))/2+ka*t');
-AmpR(iSeg) = subs(AmpR(iSeg),ka,2/5*sqrt(5)/TimeSeg(iSeg));
+AmpR(iSeg) = sym('1/2-4/15*sqrt(3)+ka*t');
+AmpR(iSeg) = subs(AmpR(iSeg),ka,2/5*sqrt(3)/TimeSeg(iSeg));
 
 ValueIntf(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = ...
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))));
@@ -61,8 +61,8 @@ fi(iSeg) = subs(f,y,sym('0.9-kf*t'));
 fi(iSeg) = subs(fi(iSeg),kf,0.8/TimeSeg(iSeg));
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
-AmpR(iSeg) = sym('(1+2/5*sqrt(5))/2');
-AmpR(iSeg) = subs(AmpR(iSeg),ka,2/5*sqrt(5)/TimeSeg(iSeg));
+AmpR(iSeg) = sym('1/2+2/15*sqrt(3)');
+AmpR(iSeg) = subs(AmpR(iSeg),ka,2/5*sqrt(3)/TimeSeg(iSeg));
 
 ValueIntf(SegStartPoint(iSeg):SegStartPoint(iSeg+1)-1) = ...
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))))+ValueIntf(SegStartPoint(iSeg)-1);
@@ -81,8 +81,8 @@ fi(iSeg) = subs(f,y,sym('0.1+kf*t'));
 fi(iSeg) = subs(fi(iSeg),kf,0.4/TimeSeg(iSeg));
 intfi(iSeg) = int(fi(iSeg),t,0,t);
 
-AmpR(iSeg) = sym('(1+2/5*sqrt(5))/2-ka*t');
-AmpR(iSeg) = subs(AmpR(iSeg),ka,2/5*sqrt(5)/TimeSeg(iSeg));
+AmpR(iSeg) = sym('1/2+2/15*sqrt(3)-ka*t');
+AmpR(iSeg) = subs(AmpR(iSeg),ka,2/5*sqrt(3)/TimeSeg(iSeg));
 
 ValueIntf(SegStartPoint(iSeg):end) = ...
     double(subs(intfi(iSeg),t,linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg))))+ValueIntf(SegStartPoint(iSeg)-1);
