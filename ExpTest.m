@@ -93,7 +93,7 @@ try
 for iSeg =1:3
     for iFrame = 1:SegFrame(iSeg)
         for iPolygon = 1:NumPolygon(iSeg)
-            Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame));
+            Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame),1);
         end
         vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
     end
