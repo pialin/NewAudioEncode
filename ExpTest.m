@@ -73,31 +73,38 @@ try
     
     vbl = Screen('Flip', PointerWindow);
     
-%     for iSeg =1:2
-%         
-%         for iFrame = 1:SegFrame(iSeg)
-%             
-%             for iArc = 1:NumArc(iSeg)
-%                 
-%                 Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut(iArc,:),StartAngle(iArc),ArcAngle{iSeg}(iArc,iFrame));
-%                 Screen('FillArc',PointerWindow,ColorRoundIn,RectRoundIn(iArc,:),StartAngle(iArc),ArcAngle{iSeg}(iArc,iFrame));
-%                 
-%             end
-%            
-%             
-%             vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
+    for iSeg =1:2
+        
+        for iFrame = 1:SegFrame(iSeg)
+            
+            for iArc = 1:NumArc(iSeg)
+                
+                Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut{iSeg}(iArc,:),StartAngle(iSeg),ArcAngle{iSeg}(iArc,iFrame));
+                Screen('FillArc',PointerWindow,ColorRoundIn,RectRoundIn{iSeg}(iArc,:),StartAngle(iSeg),ArcAngle{iSeg}(iArc,iFrame));
+                
+            end
+           
+            
+            vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
+        end
+        
+    end
+
+% for iSeg =1:3
+%     for iFrame = 1:SegFrame(iSeg)
+%        
+%         if iSeg == 3  
+%             Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut,StartAngle,ArcAngle(iFrame));
+%             Screen('FillArc',PointerWindow,ColorRoundIn,RectRoundIn,StartAngle,ArcAngle(iFrame));
 %         end
 %         
+%         for iPolygon = 1:NumPolygon(iSeg)
+%             Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame),1);
+%         end
+%         
+%         vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
 %     end
-
-for iSeg =1:3
-    for iFrame = 1:SegFrame(iSeg)
-        for iPolygon = 1:NumPolygon(iSeg)
-            Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame),1);
-        end
-        vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
-    end
-end
+% end
 
 
 

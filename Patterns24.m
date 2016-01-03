@@ -1,4 +1,4 @@
-%Pattern21
+%Pattern22
 SizeScreenX = 1600;
 SizeScreenY = 900;
 PenWidth = 20;
@@ -10,9 +10,9 @@ SizeCanvas = round(SizeScreenY/5*3);
 OriginX = round((SizeScreenX - SizeCanvas)/2);
 OriginY = SizeCanvas + round((SizeScreenY - SizeCanvas)/2);
 PatternVertex =...
-    [0.1,0.5;
+    [0.5,0.9;
      0.5,0.5;
-     0.9,0.5;];
+     0.5,0.1;];
  
 PatternVertex(:,1) = round(OriginX + PatternVertex(:,1)*SizeCanvas);
 PatternVertex(:,2) = round(OriginY - PatternVertex(:,2)*SizeCanvas);
@@ -62,10 +62,10 @@ RectRoundIn{iSeg}(iArc,:) = [RoundCenterX- RadiusIn ,RoundCenterY- RadiusIn ,...
 RectRoundOut{iSeg}(iArc,:) = [RoundCenterX- RadiusOut ,RoundCenterY- RadiusOut ,...
     RoundCenterX+ RadiusOut ,RoundCenterY + RadiusOut];
 
-StartAngle(iSeg) = -90;
-EndAngle(iSeg) = 90;
+StartAngle(iSeg) = 0;
+EndAngle(iSeg) = 180;
 
-ArcAngle{iSeg}(iArc,:) = linspace(0,abs(EndAngle(1)-StartAngle(1)),SegFrame(iSeg));
+ArcAngle{iSeg}(iArc,:) = linspace(0,-1*abs(EndAngle(1)-StartAngle(1)),SegFrame(iSeg));
 
 
 iSeg = iSeg +1 ;
@@ -89,9 +89,8 @@ RectRoundIn{iSeg}(iArc ,:) = [RoundCenterX- RadiusIn ,RoundCenterY- RadiusIn ,..
 RectRoundOut{iSeg}(iArc ,:) = [RoundCenterX- RadiusOut ,RoundCenterY- RadiusOut ,...
     RoundCenterX+ RadiusOut ,RoundCenterY + RadiusOut];
 
-StartAngle(iSeg) = -90;
-EndAngle(iSeg) = 90;
+StartAngle(iSeg) = 0;
+EndAngle(iSeg) = 180;
 
-ArcAngle{iSeg}(iArc,:) = linspace(0,-1*abs(EndAngle(iSeg)-StartAngle(iSeg)),SegFrame(iSeg));
-
+ArcAngle{iSeg}(iArc,:) = linspace(0,abs(EndAngle(iSeg)-StartAngle(iSeg)),SegFrame(iSeg));
 

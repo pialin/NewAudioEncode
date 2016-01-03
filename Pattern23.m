@@ -1,4 +1,4 @@
-%Pattern21
+%Pattern23
 SizeScreenX = 1600;
 SizeScreenY = 900;
 PenWidth = 20;
@@ -65,7 +65,7 @@ RectRoundOut{iSeg}(iArc,:) = [RoundCenterX- RadiusOut ,RoundCenterY- RadiusOut ,
 StartAngle(iSeg) = -90;
 EndAngle(iSeg) = 90;
 
-ArcAngle{iSeg}(iArc,:) = linspace(0,abs(EndAngle(1)-StartAngle(1)),SegFrame(iSeg));
+ArcAngle{iSeg}(iArc,:) = linspace(0,-1*abs(EndAngle(1)-StartAngle(1)),SegFrame(iSeg));
 
 
 iSeg = iSeg +1 ;
@@ -92,6 +92,6 @@ RectRoundOut{iSeg}(iArc ,:) = [RoundCenterX- RadiusOut ,RoundCenterY- RadiusOut 
 StartAngle(iSeg) = -90;
 EndAngle(iSeg) = 90;
 
-ArcAngle{iSeg}(iArc,:) = linspace(0,-1*abs(EndAngle(iSeg)-StartAngle(iSeg)),SegFrame(iSeg));
+ArcAngle{iSeg}(iArc,:) = linspace(0,abs(EndAngle(iSeg)-StartAngle(iSeg)),SegFrame(iSeg));
 
 

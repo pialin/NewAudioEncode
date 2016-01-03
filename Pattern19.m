@@ -1,4 +1,4 @@
-%Pattern13
+%Pattern19
 SizeScreenX = 1600;
 SizeScreenY = 900;
 PenWidth = 20;
@@ -11,7 +11,7 @@ OriginX = round((SizeScreenX - SizeCanvas)/2);
 OriginY = SizeCanvas + round((SizeScreenY - SizeCanvas)/2);
 PatternVertex =...
     [0.1,0.9;
-     0.1,0.1;
+     0.9,0.9;
      0.9,0.1;
      0.1,0.9;];
 PatternVertex(:,1) = round(OriginX + PatternVertex(:,1)*SizeCanvas);
@@ -49,17 +49,17 @@ iSeg = 1;
 %第一段
 
 %初始4个顶点
-PolygonVertexStart(1,1) = round(PatternVertex(iSeg,1) - PenWidth/2);
-PolygonVertexStart(1,2) = round(PatternVertex(iSeg,2) - PenWidth/2);
+PolygonVertexStart(1,1) = round(PatternVertex(iSeg+1,1) + PenWidth/2 - floor(sqrt(RadiusOut^2-PenWidth^2)));
+PolygonVertexStart(1,2) = round(PatternVertex(iSeg,2) + PenWidth/2 );
 
-PolygonVertexStart(2,1) = round(PatternVertex(iSeg+1,1) + PenWidth/2);
-PolygonVertexStart(2,2) = round(PatternVertex(iSeg+1,2) + PenWidth/2 - floor(sqrt(RadiusOut^2-PenWidth^2)));
+PolygonVertexStart(2,1) = round(PatternVertex(iSeg,1) - PenWidth/2);
+PolygonVertexStart(2,2) = round(PatternVertex(iSeg,2) - PenWidth/2);
 
 
 PolygonVertexStart(3,1) = round(PatternVertex(iSeg,1) + PenWidth/2);
-PolygonVertexStart(3,2) = round(PatternVertex(iSeg,2) + PenWidth/2);
+PolygonVertexStart(3,2) = round(PatternVertex(iSeg,2) - PenWidth/2);
 
-PolygonVertexStart(4,1) = round(PatternVertex(iSeg,1) - PenWidth/2);
+PolygonVertexStart(4,1) = round(PatternVertex(iSeg,1) + PenWidth/2);
 PolygonVertexStart(4,2) = round(PatternVertex(iSeg,2) + PenWidth/2);
 
 %结束时4个顶点
@@ -71,9 +71,9 @@ PolygonVertexEnd(2,2) =  PolygonVertexStart(2,2);
 
 
 PolygonVertexEnd(3,1) = round(PatternVertex(iSeg+1,1) + PenWidth/2);
-PolygonVertexEnd(3,2) = round(PatternVertex(iSeg+1,2) + PenWidth/2);
+PolygonVertexEnd(3,2) = round(PatternVertex(iSeg+1,2) - PenWidth/2);
 
-PolygonVertexEnd(4,1) = round(PatternVertex(iSeg+1,1) - PenWidth/2);
+PolygonVertexEnd(4,1) = round(PatternVertex(iSeg+1,1) + PenWidth/2);
 PolygonVertexEnd(4,2) = round(PatternVertex(iSeg+1,2) + PenWidth/2);
 
 
@@ -96,16 +96,16 @@ iSeg = iSeg + 1;
 
 %初始4个顶点
 PolygonVertexStart(1,1) = round(PatternVertex(iSeg,1) - PenWidth/2);
-PolygonVertexStart(1,2) = round(PatternVertex(iSeg,2) + PenWidth/2);
+PolygonVertexStart(1,2) = round(PatternVertex(iSeg,2) - PenWidth/2);
 
-PolygonVertexStart(2,1) = round(PatternVertex(iSeg,1) - PenWidth/2);
+PolygonVertexStart(2,1) = round(PatternVertex(iSeg,1) + PenWidth/2);
 PolygonVertexStart(2,2) = round(PatternVertex(iSeg,2) - PenWidth/2);
 
 
 PolygonVertexStart(3,1) = round(PatternVertex(iSeg,1) + PenWidth/2);
-PolygonVertexStart(3,2) = round(PatternVertex(iSeg,2) - PenWidth/2);
+PolygonVertexStart(3,2) = round(PatternVertex(iSeg,2) + PenWidth/2);
 
-PolygonVertexStart(4,1) = round(PatternVertex(iSeg,1) + PenWidth/2);
+PolygonVertexStart(4,1) = round(PatternVertex(iSeg,1) - PenWidth/2);
 PolygonVertexStart(4,2) = round(PatternVertex(iSeg,2) + PenWidth/2);
 
 %结束时4个顶点
@@ -115,11 +115,11 @@ PolygonVertexEnd(1,2) = PolygonVertexStart(1,2);
 PolygonVertexEnd(2,1) = PolygonVertexStart(2,1);
 PolygonVertexEnd(2,2) = PolygonVertexStart(2,2);
 
-PolygonVertexEnd(3,1) = floor(PatternVertex(iSeg,1) - PenWidth/2 + floor(sqrt(RadiusOut^2-PenWidth^2)));
-PolygonVertexEnd(3,2) = round(PatternVertex(iSeg+1,2) - PenWidth/2); 
+PolygonVertexEnd(3,1) = floor(PatternVertex(iSeg+1,1) + PenWidth/2);
+PolygonVertexEnd(3,2) = round(PatternVertex(iSeg+1,2) + PenWidth/2); 
 
-PolygonVertexEnd(4,1) = round(PatternVertex(iSeg+1,1) + PenWidth/2);
-PolygonVertexEnd(4,2) = round(PatternVertex(iSeg+1,2) + PenWidth/2);
+PolygonVertexEnd(4,1) = round(PatternVertex(iSeg+1,1) - PenWidth/2);
+PolygonVertexEnd(4,2) = round(PatternVertex(iSeg,2) - PenWidth/2 + floor(sqrt(RadiusOut^2-PenWidth^2)));
 
 if iSeg > 1
     PolygonVertex{iSeg}(:,1:2*(iSeg-1),:) = repmat(PolygonVertex{iSeg-1}(:,:,end),[1,1,SegFrame(iSeg)]);
@@ -143,8 +143,8 @@ iSeg = iSeg + 1;
 PolygonVertex{iSeg} = repmat(PolygonVertex{iSeg-1}(:,:,end),[1,1,SegFrame(iSeg)]);
 
 %绘制1/4圆
-RoundCenterX = round(PatternVertex(2,1) - PenWidth/2);
-RoundCenterY = round(PatternVertex(2,2) + PenWidth/2);
+RoundCenterX = round(PatternVertex(2,1) + PenWidth/2);
+RoundCenterY = round(PatternVertex(2,2) - PenWidth/2);
 
 
 
@@ -154,12 +154,12 @@ RectRoundOut = [RoundCenterX - RadiusOut ,RoundCenterY - RadiusOut ,...
 RectRoundIn = [RoundCenterX - RadiusIn ,RoundCenterY - RadiusIn ,...
     RoundCenterX + RadiusIn ,RoundCenterY + RadiusIn];
 
-StartAngle = 90;
-EndAngle = 0;
+StartAngle = 180;
+EndAngle = 270;
 
 
 
-ArcAngle = linspace(0,-1*abs(EndAngle-StartAngle),SegFrame(iSeg));
+ArcAngle = linspace(0,abs(EndAngle-StartAngle),SegFrame(iSeg));
 
 ColorRoundIn = black;
 ColorRoundOut = white;
