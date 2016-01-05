@@ -1,8 +1,9 @@
-%Pattern23
+%Pattern24
+
 PatternVertex =...
-    [0.1,0.5;
+    [0.5,0.9;
      0.5,0.5;
-     0.9,0.5;];
+     0.5,0.1;];
  
 PatternVertex(:,1) = round(OriginX + PatternVertex(:,1)*SizeCanvas);
 PatternVertex(:,2) = round(OriginY - PatternVertex(:,2)*SizeCanvas);
@@ -12,7 +13,7 @@ PatternVertex(:,2) = round(OriginY - PatternVertex(:,2)*SizeCanvas);
 NumArc = [1,2];
 ColorPolygon = white;
 
-NumSeg = 2;
+NumSeg =2;
 SegLength = [0.2*pi,0.2*pi];
 SegFrame= zeros(size(SegLength));
 SumTime = 3;
@@ -52,8 +53,8 @@ RectRoundIn{iSeg}(iArc,:) = [RoundCenterX- RadiusIn ,RoundCenterY- RadiusIn ,...
 RectRoundOut{iSeg}(iArc,:) = [RoundCenterX- RadiusOut ,RoundCenterY- RadiusOut ,...
     RoundCenterX+ RadiusOut ,RoundCenterY + RadiusOut];
 
-StartAngle(iSeg) = -90;
-EndAngle(iSeg) = 90;
+StartAngle(iSeg) = 0;
+EndAngle(iSeg) = 180;
 
 ArcAngle{iSeg}(iArc,:) = linspace(0,-1*abs(EndAngle(1)-StartAngle(1)),SegFrame(iSeg));
 
@@ -79,9 +80,8 @@ RectRoundIn{iSeg}(iArc ,:) = [RoundCenterX- RadiusIn ,RoundCenterY- RadiusIn ,..
 RectRoundOut{iSeg}(iArc ,:) = [RoundCenterX- RadiusOut ,RoundCenterY- RadiusOut ,...
     RoundCenterX+ RadiusOut ,RoundCenterY + RadiusOut];
 
-StartAngle(iSeg) = -90;
-EndAngle(iSeg) = 90;
+StartAngle(iSeg) = 0;
+EndAngle(iSeg) = 180;
 
 ArcAngle{iSeg}(iArc,:) = linspace(0,abs(EndAngle(iSeg)-StartAngle(iSeg)),SegFrame(iSeg));
-
 

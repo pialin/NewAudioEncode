@@ -1,14 +1,5 @@
-%Pattern13
-SizeScreenX = 1600;
-SizeScreenY = 900;
-PenWidth = 20;
-white = 1;
-black = 0;
-FramePerSecond = 60;
+%Pattern17
 
-SizeCanvas = round(SizeScreenY/5*3);
-OriginX = round((SizeScreenX - SizeCanvas)/2);
-OriginY = SizeCanvas + round((SizeScreenY - SizeCanvas)/2);
 PatternVertex =...
     [0.1,0.9;
      0.1,0.1;
@@ -25,7 +16,7 @@ NumPolygonVertex  = 4;
 ColorPolygon = white;
 
 
-SegLength = [0.8,2*pi*0.8/4,0.8];
+SegLength = [0.8,0.8,2*pi*0.8/4];
 SegFrame= zeros(size(SegLength));
 SumTime = 3;
 SegTime = SegLength/sum(SegLength)*SumTime;

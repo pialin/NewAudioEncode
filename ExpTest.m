@@ -9,6 +9,8 @@
 % clear;
 % sca;
 
+
+
 %修改工作路径至当前M文件所在目录
 Path=mfilename('fullpath');
 FileSepIndex = strfind(Path,filesep);

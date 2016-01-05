@@ -1,14 +1,4 @@
 %Pattern22
-SizeScreenX = 1600;
-SizeScreenY = 900;
-PenWidth = 20;
-white = 1;
-black = 0;
-FramePerSecond = 60;
-
-SizeCanvas = round(SizeScreenY/5*3);
-OriginX = round((SizeScreenX - SizeCanvas)/2);
-OriginY = SizeCanvas + round((SizeScreenY - SizeCanvas)/2);
 PatternVertex =...
     [0.5,0.9;
      0.5,0.5;
@@ -22,15 +12,15 @@ PatternVertex(:,2) = round(OriginY - PatternVertex(:,2)*SizeCanvas);
 NumArc = [1,2];
 ColorPolygon = white;
 
-
+NumSeg = 2;
 SegLength = [0.2*pi,0.2*pi];
 SegFrame= zeros(size(SegLength));
 SumTime = 3;
 SegTime = SegLength/sum(SegLength)*SumTime;
 
 SumFrame = round(SumTime*FramePerSecond);
-SegFrame(1:end-1) = round(SegTime(1:end-1)*FramePerSecond);
-SegFrame(end) = SumFrame - sum(SegFrame(1:end-1));
+SegFrame(1:NumSeg-1) = round(SegTime(1:NumSeg-1)*FramePerSecond);
+SegFrame(NumSeg) = SumFrame - sum(SegFrame(1:NumSeg-1));
 
 RadiusOut = round(0.2*SizeCanvas + PenWidth/2);
 

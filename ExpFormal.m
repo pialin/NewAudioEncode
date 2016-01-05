@@ -1,4 +1,4 @@
-%此程序为训练程序
+%此程序为正式实验程序
 %软件环境：
 %Psychtoolbox:3.0.12
 %Matlab:R2015a x64
@@ -49,6 +49,11 @@ ScreenNumber = max(AllScreen);
 %获取黑白对应的颜色设定值并据此计算其他一些颜色的设定值
 white = WhiteIndex(ScreenNumber);
 black = BlackIndex(ScreenNumber);
+
+%运行用到的mex函数以节省后续调用时间
+GetSecs;
+WaitSecs(0.1);
+KbWait([],1);
 
 
 
@@ -110,8 +115,39 @@ try
     %播放音量设置
     PsychPortAudio('Volume', HandlePortAudio, AudioVolume);
     
+    DataWhiteNoise = wgn(2,TimeWhiteNoise*AudioSampleRate,PowerWhiteNoise);
     
-    %进行第一次Flip以获取时间
+    DataWhiteNoise = DataWhiteNoise/max(abs(DataWhiteNoise(:)))*0.6;
+    
+    %淡入淡出
+    NumPointFadeIn = 1000;
+    
+    NumPointFadeOut = 1000;
+    
+    t = (-1*round(NumPointFadeIn):-1)/AudioSampleRate;
+    
+    FreqFadeIn = AudioSampleRate/(2*NumPointFadeIn);
+    
+    AmpFadeIn = (cos(2*pi*FreqFadeIn*t)+1)/2;
+    
+    t = (1:round(NumPointFadeOut))/AudioSampleRate;
+    
+    FreqFadeOut = AudioSampleRate/(2*NumPointFadeOut);
+    
+    AmpFadeOut = (cos(2*pi*FreqFadeOut*t)+1)/2;
+    
+    
+    DataWhiteNoise(:,1:NumPointFadeIn)=DataWhiteNoise(:,1:NumPointFadeIn).*repmat(AmpFadeIn,2,1);
+    
+    
+    DataWhiteNoise(:,end-NumPointFadeIn+1:end)=DataWhiteNoise(:,end-NumPointFadeIn+1:end).*repmat(AmpFadeOut,2,1);
+    
+    
+    %     HandleWhiteNoiseBuffer = PsychPortAudio('CreateBuffer',HandlePortAudio,DataWhiteNoise);
+    
+    
+    
+    %进行第一次Flip以获取当前时间
     vbl = Screen('Flip', PointerWindow);
     
     PatternRangeMin = min(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
@@ -119,8 +155,26 @@ try
     
     iPattern = randi([PatternRangeMin,PatternRangeMax],1,NumTrial);
     
+    t = linspace(0,TimeHintSound/6,round(TimeHintSound/6*AudioSampleRate));
     
-    for iTrial =1:NumTrial 
+
+    DataHintSound =  sin(2*pi*FreqHintSound*t);
+    
+    DataHintSound = repmat([DataHintSound,zeros(1,TimeHintSound/6*AudioSampleRate)],1,3);
+    
+    PsychPortAudio('Stop', HandlePortAudio);
+    
+    %将提示音填充到PortAudio对象的Buffer中
+    PsychPortAudio('FillBuffer', HandlePortAudio,repmat(DataHintSound,2,1));
+    %播放提示音
+    PsychPortAudio('Start', HandlePortAudio, 1, AudioStartTime, WaitUntilDeviceStart);
+    
+    pause(TimeHintSound);
+    
+    
+    
+    
+    for iTrial =1:NumTrial
         
         eval(['Pattern',num2str(iPattern(iTrial))]);
         eval(['load Sound',num2str(iPattern(iTrial)),'.mat']);
@@ -128,118 +182,18 @@ try
         PsychPortAudio('Stop', HandlePortAudio);
         
         %填充到PortAudio对象的Buffer中
-        PsychPortAudio('FillBuffer', HandlePortAudio,DataAudio);
+        PsychPortAudio('FillBuffer', HandlePortAudio,...
+            [DataWhiteNoise,zeros(2,TimeSilence1*AudioSampleRate),DataAudio,zeros(2,TimeSilence2*AudioSampleRate),DataAudio]);
         %播放声音
         PsychPortAudio('Start', HandlePortAudio, 1, AudioStartTime, WaitUntilDeviceStart);
-        %%
-        if iPattern(iTrial)>=1 && iPattern(iTrial)<=16
-            for iSeg =1:NumSeg
-                
-                for iFrame = 1:SegFrame(iSeg)
-                    
-                    for iPolygon = 1:NumPolygon(iSeg)
-                        Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame),1);
-                    end
-                    
-                    
-                    Screen('DrawingFinished', PointerWindow);
-                    vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
-                    %读取键盘输入，若Esc键被按下则立刻退出程序
-                    [IsKeyDown,~,KeyCode] = KbCheck;
-                    if IsKeyDown && KeyCode(KbName('ESCAPE'))
-                        %关闭PortAudio对象
-                        PsychPortAudio('Close');
-                        %恢复显示优先级
-                        Priority(0);
-                        %关闭所有窗口对象
-                        sca;
-                        %恢复键盘设定
-                        %恢复Matlab命令行窗口对键盘输入的响应
-                        ListenChar(0);
-                        %恢复KbCheck函数对所有键盘输入的响应
-                        RestrictKeysForKbCheck([]);
-                        %终止程序
-                        return;
-                    end
-                end
-            end
-            
-        elseif iPattern(iTrial)>=17 && iPattern(iTrial)<=20
-            for iSeg =1:NumSeg
-                
-                for iFrame = 1:SegFrame(iSeg)
-                    
-                    if iSeg == NumSeg
-                        Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut,StartAngle,ArcAngle(iFrame));
-                        Screen('FillArc',PointerWindow,ColorRoundIn,RectRoundIn,StartAngle,ArcAngle(iFrame));
-                    end
-                    
-                    for iPolygon = 1:NumPolygon(iSeg)
-                        Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame),1);
-                    end
-                    
-                    
-                    Screen('DrawingFinished', PointerWindow);
-                    vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
-                    %读取键盘输入，若Esc键被按下则立刻退出程序
-                    [IsKeyDown,~,KeyCode] = KbCheck;
-                    if IsKeyDown && KeyCode(KbName('ESCAPE'))
-                        %关闭PortAudio对象
-                        PsychPortAudio('Close');
-                        %恢复显示优先级
-                        Priority(0);
-                        %关闭所有窗口对象
-                        sca;
-                        %恢复键盘设定
-                        %恢复Matlab命令行窗口对键盘输入的响应
-                        ListenChar(0);
-                        %恢复KbCheck函数对所有键盘输入的响应
-                        RestrictKeysForKbCheck([]);
-                        %终止程序
-                        return;
-                    end
-                end
-            end
-            
-        else iPattern(iTrial)>=21 && iPattern(iTrial)<=24
-            
-            for iSeg = 1:NumSeg
-                for iFrame = 1:SegFrame(iSeg)
-                    
-                    for iArc = 1:NumArc(iSeg)
-                        
-                        Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut{iSeg}(iArc,:),StartAngle(iSeg),ArcAngle{iSeg}(iArc,iFrame));
-                        Screen('FillArc',PointerWindow,ColorRoundIn,RectRoundIn{iSeg}(iArc,:),StartAngle(iSeg),ArcAngle{iSeg}(iArc,iFrame));
-                        
-                    end
-                    
-                    
-                    Screen('DrawingFinished', PointerWindow);
-                    vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
-                    
-                    %读取键盘输入，若Esc键被按下则立刻退出程序
-                    [IsKeyDown,~,KeyCode] = KbCheck;
-                    if IsKeyDown && KeyCode(KbName('ESCAPE'))
-                        %关闭PortAudio对象
-                        PsychPortAudio('Close');
-                        %恢复显示优先级
-                        Priority(0);
-                        %关闭所有窗口对象
-                        sca;
-                        %恢复键盘设定
-                        %恢复Matlab命令行窗口对键盘输入的响应
-                        ListenChar(0);
-                        %恢复KbCheck函数对所有键盘输入的响应
-                        RestrictKeysForKbCheck([]);
-                        %终止程序
-                        return;
-                    end
-                end
-            end
-        end
         
-        TimeNow = KbWait ([],1);
-        [~, KeyCode,~] = KbWait([],0,TimeNow+GapSilence);
+        %等待
+        % WaitSecs(TimeWhiteNoise+TimeSilence1+2*TimeCodeSound+TimeSilence2);
+        pause(TimeWhiteNoise+TimeSilence1+2*TimeCodeSound+TimeSilence2);
+        
+        vbl = Screen('Flip', PointerWindow);
+        
+        [~, KeyCode,~] = KbWait([],0,GetSecs+TimeSilence3);
         if KeyCode(KbName('ESCAPE'))
             %关闭PortAudio对象
             PsychPortAudio('Close');
@@ -254,6 +208,10 @@ try
             RestrictKeysForKbCheck([]);
             %终止程序
             return;
+        elseif KeyCode(KbName('space'))
+            
+            PsychPortAudio('Stop', HandlePortAudio);
+            
         end
         
     end

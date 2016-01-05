@@ -122,5 +122,4 @@ DataAudio(:,end-NumPointFadeIn+1:end)=DataAudio(:,end-NumPointFadeIn+1:end).*rep
 
 sound(DataAudio,AudioSampleRate);
 
-Sound16 = DataAudio;
-save Sound16.mat Sound16 AudioSampleRate;
+save Sound16.mat DataAudio;

@@ -1,14 +1,4 @@
-%Pattern13
-SizeScreenX = 1600;
-SizeScreenY = 900;
-PenWidth = 20;
-white = 1;
-black = 0;
-FramePerSecond = 60;
-
-SizeCanvas = round(SizeScreenY/5*3);
-OriginX = round((SizeScreenX - SizeCanvas)/2);
-OriginY = SizeCanvas + round((SizeScreenY - SizeCanvas)/2);
+%Pattern15
 PatternVertex =...
     [0.1,1/2+2/15*sqrt(3);
      0.9,1/2+2/15*sqrt(3);

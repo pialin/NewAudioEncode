@@ -7,36 +7,53 @@ green = [black,white,black];
 blue = [black,black,white];
 gray = white/2;
 
+FontName = 'Î¢ÈíÑÅºÚ';
+FontSize = 40;
+
 
 TimeSum = 3;
-NumSeg = 3;
-NumSumPoint = round(TimeSum*FramePerSecond);
-TimeSeg =[1,1,1];
-NumSegPoint = round(TimeSeg*FramePerSecond);
-SegStartPoint = round((cumsum(TimeSeg)-1)*FramePerSecond)+1;
-SeqPointX =  zeros(1,NumSumPoint);
-SeqPointY =  zeros(1,NumSumPoint);
+
 
 SizeCanvas = round(SizeScreenY*3/5);
 
+OriginX = round((SizeScreenX - SizeCanvas)/2);
+OriginY = SizeCanvas + round((SizeScreenY - SizeCanvas)/2);
 
-LineWidth = 20;
+
+
+PenWidth = 20;
+
+AudioSampleRate = 48000;
+
+AudioVolume = 0.8;
+
+
+NumPattern =24;
+
+NumTrial = 2;
+
+DifficultySetting = 1;
+PatternDifficulty(1,:) =  1: 8;
+PatternDifficulty(2,:) =  9:16;
+PatternDifficulty(3,:) = 17:24;
 
 
 
-iSet = 1;
-%¶Î1 
-t = linspace(0,TimeSeg(iSeg),NumSegPoint(iSeg));
-SeqPointX(SegStartPoint(iSeg):SegEndPoint(iSeg)+NumSegPoint(iSeg)-1)= 0.1;
-SeqPointY(SegStartPoint(iSeg):SegEndPoint(iSeg)+NumSegPoint(iSeg)-1)= linspace(0.9,0.1,NumSegPoint(iSeg));
+TimeWhiteNoise = 2;
 
-iSet = iSet+1;
-%¶Î2
-SeqPointX(SegStartPoint(iSeg):SegEndPoint(iSeg)+NumSegPoint(iSeg)-1)= linspace(0.9,0.1,NumSegPoint(iSeg));
-SeqPointY(SegStartPoint(iSeg):SegEndPoint(iSeg)+NumSegPoint(iSeg)-1)= 0.1;
+PowerWhiteNoise = 2;
 
-iSet = iSet+1;
-%¶Î3
-SeqPointX(SegStartPoint(iSeg):SegEndPoint(iSeg)+NumSegPoint(iSeg)-1)= 0.9;
-SeqPointY(SegStartPoint(iSeg):SegEndPoint(iSeg)+NumSegPoint(iSeg)-1)= linspace(0.9,0.1,NumSegPoint(iSeg));
+TimeSilence1 = 2;
+
+TimeSilence2 = 2;
+
+TimeSilence3 = 2;
+
+ReplayTimes = 2;
+
+TimeCodeSound = 10; 
+
+FreqHintSound = 1000;
+
+TimeHintSound  = 3;
 
