@@ -14,6 +14,32 @@ Path=mfilename('fullpath');
 FileSepIndex = strfind(Path,filesep);
 cd(Path(1:FileSepIndex(end)));
 
+%从输入对话框获取受试者名字
+
+InputdlgOptions.Resize = 'on';
+InputdlgOptions.WindowStyle = 'normal';
+
+if exist('LastSubjectName.mat','file')
+    load LastSubjectName.mat;
+    SubjectName = inputdlg('Subject Name:','请输入受试者名字',[1,42],{LastSubjectName},InputdlgOptions);
+else
+    SubjectName = inputdlg('Subject Name:','请输入受试者名字',[1,42],{'ABC'},InputdlgOptions);
+end
+
+if isempty(SubjectName)
+    return;
+end
+
+%存储本次输入的名字作为后续实验受试名称的默认值
+LastSubjectName = SubjectName{1};
+
+save LastSubjectName.mat LastSubjectName;
+
+
+DateString = datestr(now,'yyyymmdd_HH-MM-SS');
+
+
+
 %获取当前Matlab版本
 MatlabRelease = version('-release');
 
@@ -71,12 +97,12 @@ try
     FramePerSecond =1/TimePerFlip;
     
     %获取可用的屏幕显示优先级？？
-    LevelTopPriority = MaxPriority(PointerWindow,'KbCheck','KbWait');
+    LevelTopPriority = MaxPriority(PointerWindow,'KbCheck','KbWait','GetSecs');
     %获取屏幕分辨率 SizeScreenX,SizeScreenY分别指横向和纵向的分辨率
     [SizeScreenX, SizeScreenY] = Screen('WindowSize', PointerWindow);
     
-    %调用ExpTrain_ParameterSetting.m设置相应参数
-    ExpTrain_ParameterSetting;
+    %调用Exp_ParameterSetting.m设置相应参数
+    Exp_ParameterSetting;
     
     %字体和大小设定
     Screen('TextFont', PointerWindow, FontName);
@@ -115,7 +141,7 @@ try
     %播放音量设置
     PsychPortAudio('Volume', HandlePortAudio, AudioVolume);
     
-    DataWhiteNoise = wgn(2,TimeWhiteNoise*AudioSampleRate,PowerWhiteNoise);
+    DataWhiteNoise = wgn(2,round(TimeWhiteNoise*AudioSampleRate),PowerWhiteNoise);
     
     DataWhiteNoise = DataWhiteNoise/max(abs(DataWhiteNoise(:)))*0.6;
     
@@ -143,7 +169,8 @@ try
     DataWhiteNoise(:,end-NumPointFadeIn+1:end)=DataWhiteNoise(:,end-NumPointFadeIn+1:end).*repmat(AmpFadeOut,2,1);
     
     
-    %     HandleWhiteNoiseBuffer = PsychPortAudio('CreateBuffer',HandlePortAudio,DataWhiteNoise);
+    HandleWhiteNoiseBuffer = PsychPortAudio('CreateBuffer',HandlePortAudio,...
+        [zeros(2,round(TimeGapSilence*AudioSampleRate)),DataWhiteNoise,zeros(2,round(TimeGapSilence*AudioSampleRate))]);
     
     
     
@@ -157,8 +184,32 @@ try
     
     t = linspace(0,TimeHintSound/6,round(TimeHintSound/6*AudioSampleRate));
     
-
-    DataHintSound =  sin(2*pi*FreqHintSound*t);
+    
+    DataHintSound =  0.5*sin(2*pi*FreqHintSound*t);
+    
+    %淡入淡出
+    NumPointFadeIn = 8000;
+    
+    NumPointFadeOut = 8000;
+    
+    t = (-1*round(NumPointFadeIn):-1)/AudioSampleRate;
+    
+    FreqFadeIn = AudioSampleRate/(2*NumPointFadeIn);
+    
+    AmpFadeIn = (cos(2*pi*FreqFadeIn*t)+1)/2;
+    
+    t = (1:round(NumPointFadeOut))/AudioSampleRate;
+    
+    FreqFadeOut = AudioSampleRate/(2*NumPointFadeOut);
+    
+    AmpFadeOut = (cos(2*pi*FreqFadeOut*t)+1)/2;
+    
+    
+    DataHintSound(:,1:NumPointFadeIn)=DataHintSound(:,1:NumPointFadeIn).*AmpFadeIn;
+    
+    
+    DataHintSound(:,end-NumPointFadeIn+1:end)=DataHintSound(:,end-NumPointFadeIn+1:end).*AmpFadeOut;
+    
     
     DataHintSound = repmat([DataHintSound,zeros(1,TimeHintSound/6*AudioSampleRate)],1,3);
     
@@ -169,32 +220,71 @@ try
     %播放提示音
     PsychPortAudio('Start', HandlePortAudio, 1, AudioStartTime, WaitUntilDeviceStart);
     
-    pause(TimeHintSound);
+
+    [~, KeyCode,~] = KbWait([],0,GetSecs+TimeHintSound);
+    if KeyCode(KbName('ESCAPE'))
+        %         %并口标记253表示实验因Esc键被按下而提前结束
+        %         lptwrite(LptAddress,253);
+        %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+        %         WaitSecs(0.1);
+        %         %将并口置0
+        %         lptwrite(LptAddress,0);
+        %关闭PortAudio对象
+        PsychPortAudio('Close');
+        %恢复显示优先级
+        Priority(0);
+        %关闭所有窗口对象
+        sca;
+        %恢复键盘设定
+        %恢复Matlab命令行窗口对键盘输入的响应
+        ListenChar(0);
+        %恢复KbCheck函数对所有键盘输入的响应
+        RestrictKeysForKbCheck([]);
+        %终止程序
+        return;     
+    end
     
     
+    PsychPortAudio('Stop', HandlePortAudio);
     
+    %         %并口标记251表示实验开始
+    %         lptwrite(LptAddress,251);
+    %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+    %         WaitSecs(0.1);
+    %         %将并口置0
+    %         lptwrite(LptAddress,0);
     
-    for iTrial =1:NumTrial
-        
-        eval(['Pattern',num2str(iPattern(iTrial))]);
-        eval(['load Sound',num2str(iPattern(iTrial)),'.mat']);
-        
-        PsychPortAudio('Stop', HandlePortAudio);
+    iPattern = randi([PatternRangeMin,PatternRangeMax],1,NumTrial);
+    
+    iTrial = 0;
+    
+    while  iTrial < NumTrial
+        iTrial = iTrial + 1;
+        if iTrial == 1 ||(iTrial >1 && iPattern(iTrial-1) ~= iPattern(iTrial))
+            eval(['Pattern',num2str(iPattern(iTrial))]);
+            eval(['load Sound',num2str(iPattern(iTrial)),'.mat']);
+        end
         
         %填充到PortAudio对象的Buffer中
-        PsychPortAudio('FillBuffer', HandlePortAudio,...
-            [DataWhiteNoise,zeros(2,TimeSilence1*AudioSampleRate),DataAudio,zeros(2,TimeSilence2*AudioSampleRate),DataAudio]);
+        PsychPortAudio('FillBuffer', HandlePortAudio,HandleWhiteNoiseBuffer);
         %播放声音
         PsychPortAudio('Start', HandlePortAudio, 1, AudioStartTime, WaitUntilDeviceStart);
         
-        %等待
-        % WaitSecs(TimeWhiteNoise+TimeSilence1+2*TimeCodeSound+TimeSilence2);
-        pause(TimeWhiteNoise+TimeSilence1+2*TimeCodeSound+TimeSilence2);
+        %         %并口标记250表示开始Trial开始(无声->高斯->无声->编码声音->无声->编码声音->无声...)
+        %         lptwrite(LptAddress,250);
+        %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+        %         WaitSecs(0.1);
+        %         %将并口置0
+        %         lptwrite(LptAddress,0);
         
-        vbl = Screen('Flip', PointerWindow);
-        
-        [~, KeyCode,~] = KbWait([],0,GetSecs+TimeSilence3);
+        [~, KeyCode,~] = KbWait([],0,GetSecs+TimeWhiteNoise+2*TimeGapSilence-0.1);
         if KeyCode(KbName('ESCAPE'))
+            %         %并口标记253表示实验因Esc键被按下而提前结束
+            %         lptwrite(LptAddress,253);
+            %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+            %         WaitSecs(0.1);
+            %         %将并口置0
+            %         lptwrite(LptAddress,0);
             %关闭PortAudio对象
             PsychPortAudio('Close');
             %恢复显示优先级
@@ -209,12 +299,92 @@ try
             %终止程序
             return;
         elseif KeyCode(KbName('space'))
-            
+            %         %并口标记252表示实验跳转至下一个图案
+            %         lptwrite(LptAddress,252);
+            %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+            %         WaitSecs(0.1);
+            %         %将并口置0
+            %         lptwrite(LptAddress,0);
             PsychPortAudio('Stop', HandlePortAudio);
-            
+            %等待空格键松开
+            KbWait([],1);
+            continue;
         end
         
+        
+        %填充到PortAudio对象的Buffer中
+        PsychPortAudio('FillBuffer', HandlePortAudio,...
+            [DataAudio,zeros(2,round(TimeGapSilence*AudioSampleRate))]);
+        %播放声音
+        PsychPortAudio('Start', HandlePortAudio, 0, AudioStartTime, WaitUntilDeviceStart);
+        
+        %         %并口标记表示编码声音开始播放
+        %         lptwrite(LptAddress,mod(iPattern(iTrial)-1,200)+1);
+        %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+        %         WaitSecs(0.1);
+        %         %将并口置0
+        %         lptwrite(LptAddress,0);
+        
+        
+        %等待
+        [~, KeyCode,~] = KbWait([],0);
+        if KeyCode(KbName('ESCAPE'))
+            
+            %         %并口标记253表示实验因Esc键被按下而提前结束
+            %         lptwrite(LptAddress,253);
+            %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+            %         WaitSecs(0.1); 
+            %         %将并口置0
+            %         lptwrite(LptAddress,0);
+            %关闭PortAudio对象
+            PsychPortAudio('Close');
+            %恢复显示优先级
+            Priority(0);
+            %关闭所有窗口对象
+            sca;
+            %恢复键盘设定
+            %恢复Matlab命令行窗口对键盘输入的响应
+            ListenChar(0);
+            %恢复KbCheck函数对所有键盘输入的响应
+            RestrictKeysForKbCheck([]);
+            %终止程序
+            return;
+        elseif KeyCode(KbName('space'))
+            %         %并口标记252表示实验跳转至下一个图案
+            %         lptwrite(LptAddress,252);
+            %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+            %         WaitSecs(0.1);
+            %         %将并口置0
+            %         lptwrite(LptAddress,0);
+            PsychPortAudio('Stop', HandlePortAudio);
+            %等待空格键松开
+            KbWait([],1);
+            continue;
+        end
+        
+        
     end
+    
+    
+    %         %并口标记254表示实验正常结束
+    %         lptwrite(LptAddress,254);
+    %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
+    %         WaitSecs(0.1);
+    %         %将并口置0
+    %         lptwrite(LptAddress,0);
+    
+    %%
+    %存储记录文件
+    %记录文件路径
+    RecordPath = ['.',filesep,'RecordFiles',filesep,SubjectName{1}];
+    if ~exist(RecordPath,'dir')
+        mkdir(RecordPath);
+    end
+    %记录文件名
+    RecordFile = [RecordPath,filesep,DateString,'.mat'];
+    
+    %存储的变量包括NumCodeDot,NumTrial,SequenceCodeDot
+    save(RecordFile,'iPattern');
     
     
     %恢复Matlab命令行窗口对键盘输入的响应
@@ -223,8 +393,6 @@ try
     RestrictKeysForKbCheck([]);
     PsychPortAudio('Close');
     sca;
-    
-    
     
     
     %%

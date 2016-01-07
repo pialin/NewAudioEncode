@@ -70,8 +70,8 @@ try
     %获取屏幕分辨率 SizeScreenX,SizeScreenY分别指横向和纵向的分辨率
     [SizeScreenX, SizeScreenY] = Screen('WindowSize', PointerWindow);
     
-    %调用ExpTrain_ParameterSetting.m设置相应参数
-    ExpTrain_ParameterSetting;
+    %调用Exp_ParameterSetting.m设置相应参数
+    Exp_ParameterSetting;
     
     %字体和大小设定
     Screen('TextFont', PointerWindow, FontName);
@@ -117,23 +117,54 @@ try
     PatternRangeMin = min(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
     PatternRangeMax = max(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
     
-    iPattern = randi([PatternRangeMin,PatternRangeMax],1,NumTrial);
     
-    
-    for iTrial =1:NumTrial 
+    [~, KeyCode,~] = KbWait([],0,GetSecs+TimeGapSilence);
+    if KeyCode(KbName('ESCAPE'))
+        %关闭PortAudio对象
+        PsychPortAudio('Close');
+        %恢复Matlab命令行窗口对键盘输入的响应
+        ListenChar(0);
+        %恢复KbCheck函数对所有键盘输入的响应
+        RestrictKeysForKbCheck([]);
+        sca;
+        %终止程序
+        return;
+    end
         
-        eval(['Pattern',num2str(iPattern(iTrial))]);
-        eval(['load Sound',num2str(iPattern(iTrial)),'.mat']);
+    
+    
+    FlagNext = true;
+    iPattern = 0;
+   
+    while 1
+        
+        if FlagNext ==true
+            iPatternTemp = iPattern;
+            iPattern = randi([PatternRangeMin,PatternRangeMax]);
+            FlagNext = false;
+
+            if iPattern ~= iPatternTemp
+                eval(['Pattern',num2str(iPattern)]);
+                eval(['load Sound',num2str(iPattern),'.mat']);
+            end
         
         PsychPortAudio('Stop', HandlePortAudio);
         
         %填充到PortAudio对象的Buffer中
-        PsychPortAudio('FillBuffer', HandlePortAudio,DataAudio);
+        PsychPortAudio('FillBuffer', HandlePortAudio,[DataAudio,zeros(2,round(TimeGapSilence*AudioSampleRate))]);
         %播放声音
-        PsychPortAudio('Start', HandlePortAudio, 1, AudioStartTime, WaitUntilDeviceStart);
+        PsychPortAudio('Start', HandlePortAudio, 0, AudioStartTime, WaitUntilDeviceStart);
+        
+        end
+        
+
         %%
-        if iPattern(iTrial)>=1 && iPattern(iTrial)<=16
+        if iPattern>=1 && iPattern<=16
             for iSeg =1:NumSeg
+                
+                if FlagNext == true
+                    break;
+                end
                 
                 for iFrame = 1:SegFrame(iSeg)
                     
@@ -160,12 +191,25 @@ try
                         RestrictKeysForKbCheck([]);
                         %终止程序
                         return;
+                    elseif IsKeyDown && KeyCode(KbName('space'))
+                        
+                        FlagNext = true;
+                        
+                        PsychPortAudio('Stop', HandlePortAudio);
+                        %等待空格键松开
+                        KbWait([],1);
+                        break;
                     end
                 end
+          
             end
             
-        elseif iPattern(iTrial)>=17 && iPattern(iTrial)<=20
+        elseif iPattern>=17 && iPattern<=20
             for iSeg =1:NumSeg
+                
+                if FlagNext == true
+                    break;
+                end
                 
                 for iFrame = 1:SegFrame(iSeg)
                     
@@ -197,13 +241,27 @@ try
                         RestrictKeysForKbCheck([]);
                         %终止程序
                         return;
+                    elseif IsKeyDown && KeyCode(KbName('space'))
+                        
+                        FlagNext = true;
+                        
+                        PsychPortAudio('Stop', HandlePortAudio);
+                        %等待空格键松开
+                        KbWait([],1);
+                        break;
+                        
                     end
                 end
             end
             
-        else iPattern(iTrial)>=21 && iPattern(iTrial)<=24
+        elseif iPattern>=21 && iPattern<=24
             
             for iSeg = 1:NumSeg
+                
+                if FlagNext == true
+                    break;
+                end
+                
                 for iFrame = 1:SegFrame(iSeg)
                     
                     for iArc = 1:NumArc(iSeg)
@@ -233,27 +291,44 @@ try
                         RestrictKeysForKbCheck([]);
                         %终止程序
                         return;
+                    elseif IsKeyDown && KeyCode(KbName('space'))
+                        
+                        FlagNext = true;
+                        PsychPortAudio('Stop', HandlePortAudio);
+                        %等待空格键松开
+                        KbWait([],1);
+                       
+                        break;
+                        
                     end
                 end
             end
+
         end
         
-        TimeNow = KbWait ([],1);
-        [~, KeyCode,~] = KbWait([],0,TimeNow+GapSilence);
-        if KeyCode(KbName('ESCAPE'))
-            %关闭PortAudio对象
-            PsychPortAudio('Close');
-            %恢复显示优先级
-            Priority(0);
-            %关闭所有窗口对象
-            sca;
-            %恢复键盘设定
-            %恢复Matlab命令行窗口对键盘输入的响应
-            ListenChar(0);
-            %恢复KbCheck函数对所有键盘输入的响应
-            RestrictKeysForKbCheck([]);
-            %终止程序
-            return;
+        if FlagNext == false
+            
+            [~, KeyCode,~] = KbWait([],0,GetSecs+TimeGapSilence);
+            if KeyCode(KbName('ESCAPE'))
+                %关闭PortAudio对象
+                PsychPortAudio('Close');
+                %恢复显示优先级
+                Priority(0);
+                %关闭所有窗口对象
+                sca;
+                %恢复键盘设定
+                %恢复Matlab命令行窗口对键盘输入的响应
+                ListenChar(0);
+                %恢复KbCheck函数对所有键盘输入的响应
+                RestrictKeysForKbCheck([]);
+                %终止程序
+                return;
+            elseif  KeyCode(KbName('space'))
+                FlagNext = true;
+                PsychPortAudio('Stop', HandlePortAudio);
+                %等待空格键松开
+                KbWait([],1);
+            end
         end
         
     end
