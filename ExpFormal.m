@@ -5,8 +5,10 @@
 %Windows 8.1 x64
 
 %%
+%关闭所有绘图窗口并清除所有变量
 close all;
 clear;
+%关闭已经打开的Psych窗口
 sca;
 
 %修改工作路径至当前M文件所在目录
@@ -19,14 +21,19 @@ cd(Path(1:FileSepIndex(end)));
 InputdlgOptions.Resize = 'on';
 InputdlgOptions.WindowStyle = 'normal';
 
+%检查是否有上一位受试名称的记录
 if exist('LastSubjectName.mat','file')
+    %如果有则默认沿用该受试名称(可修改)
     load LastSubjectName.mat;
     SubjectName = inputdlg('Subject Name:','请输入受试者名字',[1,42],{LastSubjectName},InputdlgOptions);
 else
+    %如果没有则将默认名称设置为'ABC'
     SubjectName = inputdlg('Subject Name:','请输入受试者名字',[1,42],{'ABC'},InputdlgOptions);
 end
 
+%如果对话框没有返回值则提示错误并退出程序
 if isempty(SubjectName)
+    errordlg('受试名称不能为空！','参数错误');
     return;
 end
 
@@ -35,21 +42,10 @@ LastSubjectName = SubjectName{1};
 
 save LastSubjectName.mat LastSubjectName;
 
-
+%获取含实验开始时间的格式字符串
 DateString = datestr(now,'yyyymmdd_HH-MM-SS');
 
 
-
-%获取当前Matlab版本
-MatlabRelease = version('-release');
-
-
-%随机数生成器状态设置
-if str2double(MatlabRelease(1:end-1))>=2011%Matla为R2011之后版本
-    rng('shuffle');
-else
-    rand('twister',mod(floor(now*8640000),2^31-1));%Matlab为R2011之前版本
-end
 %%
 %显示部分设置
 %执行默认设置2
@@ -76,7 +72,7 @@ ScreenNumber = max(AllScreen);
 white = WhiteIndex(ScreenNumber);
 black = BlackIndex(ScreenNumber);
 
-%运行用到的mex函数以节省后续调用时间
+%运行可能用到的mex函数以节省后续调用时间
 GetSecs;
 WaitSecs(0.1);
 KbWait([],1);
@@ -140,73 +136,72 @@ try
     
     %播放音量设置
     PsychPortAudio('Volume', HandlePortAudio, AudioVolume);
+    %%
+    %白噪声生成
     
+    %高斯白噪声数据生成
     DataWhiteNoise = wgn(2,round(TimeWhiteNoise*AudioSampleRate),PowerWhiteNoise);
-    
+    %归一化并降低幅度(避免白噪声音量过大)
     DataWhiteNoise = DataWhiteNoise/max(abs(DataWhiteNoise(:)))*0.6;
     
-    %淡入淡出
-    NumPointFadeIn = 1000;
+    %淡入淡出（正弦规律幅度调制）
     
+    %淡入淡出点数设置
+    NumPointFadeIn = 1000;
     NumPointFadeOut = 1000;
     
     t = (-1*round(NumPointFadeIn):-1)/AudioSampleRate;
     
+    %计算渐入幅度调制正弦函数的频率
     FreqFadeIn = AudioSampleRate/(2*NumPointFadeIn);
     
+    %计算渐入幅度调制正弦函数的幅度
     AmpFadeIn = (cos(2*pi*FreqFadeIn*t)+1)/2;
     
     t = (1:round(NumPointFadeOut))/AudioSampleRate;
     
+    %计算渐出幅度调制正弦函数的频率
     FreqFadeOut = AudioSampleRate/(2*NumPointFadeOut);
-    
+    %计算渐出幅度调制正弦函数的幅度
     AmpFadeOut = (cos(2*pi*FreqFadeOut*t)+1)/2;
     
-    
+    %将正弦幅度调制函数和白噪声开头和结尾的数据相乘
     DataWhiteNoise(:,1:NumPointFadeIn)=DataWhiteNoise(:,1:NumPointFadeIn).*repmat(AmpFadeIn,2,1);
-    
     
     DataWhiteNoise(:,end-NumPointFadeIn+1:end)=DataWhiteNoise(:,end-NumPointFadeIn+1:end).*repmat(AmpFadeOut,2,1);
     
-    
+    %新建一个buffer用于存放白噪声数据
     HandleWhiteNoiseBuffer = PsychPortAudio('CreateBuffer',HandlePortAudio,...
         [zeros(2,round(TimeGapSilence*AudioSampleRate)),DataWhiteNoise,zeros(2,round(TimeGapSilence*AudioSampleRate))]);
     
     
     
-    %进行第一次Flip以获取当前时间
-    vbl = Screen('Flip', PointerWindow);
+    %%
+    %生成提示音
     
-    PatternRangeMin = min(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
-    PatternRangeMax = max(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
-    
-    iPattern = randi([PatternRangeMin,PatternRangeMax],1,NumTrial);
+    %计算提示音(三声连续纯音)数据
     
     t = linspace(0,TimeHintSound/6,round(TimeHintSound/6*AudioSampleRate));
-    
-    
     DataHintSound =  0.5*sin(2*pi*FreqHintSound*t);
     
-    %淡入淡出
+    %淡入淡出点数设置
     NumPointFadeIn = 8000;
-    
     NumPointFadeOut = 8000;
     
     t = (-1*round(NumPointFadeIn):-1)/AudioSampleRate;
-    
+    %计算渐入幅度调制正弦函数的频率
     FreqFadeIn = AudioSampleRate/(2*NumPointFadeIn);
-    
+    %计算渐入幅度调制正弦函数的幅度
     AmpFadeIn = (cos(2*pi*FreqFadeIn*t)+1)/2;
     
     t = (1:round(NumPointFadeOut))/AudioSampleRate;
-    
+    %计算渐出幅度调制正弦函数的频率
     FreqFadeOut = AudioSampleRate/(2*NumPointFadeOut);
-    
+    %计算渐出幅度调制正弦函数的幅度
     AmpFadeOut = (cos(2*pi*FreqFadeOut*t)+1)/2;
     
-    
+    %将正弦幅度调制函数和提示音开头和结尾的数据相乘
     DataHintSound(:,1:NumPointFadeIn)=DataHintSound(:,1:NumPointFadeIn).*AmpFadeIn;
-    
     
     DataHintSound(:,end-NumPointFadeIn+1:end)=DataHintSound(:,end-NumPointFadeIn+1:end).*AmpFadeOut;
     
@@ -220,8 +215,9 @@ try
     %播放提示音
     PsychPortAudio('Start', HandlePortAudio, 1, AudioStartTime, WaitUntilDeviceStart);
     
-
+    %等待键盘输入，提示音播放完毕自动跳过等待
     [~, KeyCode,~] = KbWait([],0,GetSecs+TimeHintSound);
+    %如果Esc键被按下
     if KeyCode(KbName('ESCAPE'))
         %         %并口标记253表示实验因Esc键被按下而提前结束
         %         lptwrite(LptAddress,253);
@@ -241,11 +237,16 @@ try
         %恢复KbCheck函数对所有键盘输入的响应
         RestrictKeysForKbCheck([]);
         %终止程序
-        return;     
+        return;
     end
     
-    
+    %停止提示音播放
     PsychPortAudio('Stop', HandlePortAudio);
+    
+    %获取当前Run的图案序列
+    iPattern = MatrixPattern(NumUsedRow+1,:);
+    %将iTrial计数值归零
+    iTrial = 0;
     
     %         %并口标记251表示实验开始
     %         lptwrite(LptAddress,251);
@@ -254,18 +255,20 @@ try
     %         %将并口置0
     %         lptwrite(LptAddress,0);
     
-    iPattern = randi([PatternRangeMin,PatternRangeMax],1,NumTrial);
     
-    iTrial = 0;
+    %进行第一次Flip以获取当前时间
+    vbl = Screen('Flip', PointerWindow);
     
     while  iTrial < NumTrial
+        %Trial计数器加一
         iTrial = iTrial + 1;
+        %当第一个Trial或者本次图案与上次不同时才读取声音和图案的绘图数据
         if iTrial == 1 ||(iTrial >1 && iPattern(iTrial-1) ~= iPattern(iTrial))
             eval(['Pattern',num2str(iPattern(iTrial))]);
             eval(['load Sound',num2str(iPattern(iTrial)),'.mat']);
         end
         
-        %填充到PortAudio对象的Buffer中
+        %填充白噪声到PortAudio对象的Buffer中
         PsychPortAudio('FillBuffer', HandlePortAudio,HandleWhiteNoiseBuffer);
         %播放声音
         PsychPortAudio('Start', HandlePortAudio, 1, AudioStartTime, WaitUntilDeviceStart);
@@ -277,7 +280,9 @@ try
         %         %将并口置0
         %         lptwrite(LptAddress,0);
         
+        %等待键盘输入
         [~, KeyCode,~] = KbWait([],0,GetSecs+TimeWhiteNoise+2*TimeGapSilence-0.1);
+        %如果Esc键被按下
         if KeyCode(KbName('ESCAPE'))
             %         %并口标记253表示实验因Esc键被按下而提前结束
             %         lptwrite(LptAddress,253);
@@ -298,6 +303,7 @@ try
             RestrictKeysForKbCheck([]);
             %终止程序
             return;
+            %如果空格键被按下则跳转至下一个图案
         elseif KeyCode(KbName('space'))
             %         %并口标记252表示实验跳转至下一个图案
             %         lptwrite(LptAddress,252);
@@ -308,11 +314,12 @@ try
             PsychPortAudio('Stop', HandlePortAudio);
             %等待空格键松开
             KbWait([],1);
+            %跳至下一个while循环
             continue;
         end
         
         
-        %填充到PortAudio对象的Buffer中
+        %填充编码声音数据到PortAudio对象的Buffer中
         PsychPortAudio('FillBuffer', HandlePortAudio,...
             [DataAudio,zeros(2,round(TimeGapSilence*AudioSampleRate))]);
         %播放声音
@@ -326,14 +333,15 @@ try
         %         lptwrite(LptAddress,0);
         
         
-        %等待
+        %等待直到ESC键被按下（退出实验）或者空格键被按下（跳转至下一个图案）
         [~, KeyCode,~] = KbWait([],0);
+        %如果ESC键被按下
         if KeyCode(KbName('ESCAPE'))
             
             %         %并口标记253表示实验因Esc键被按下而提前结束
             %         lptwrite(LptAddress,253);
             %         %将并口状态保持一段时间（时长不低于NeuroScan的采样时间间隔）
-            %         WaitSecs(0.1); 
+            %         WaitSecs(0.1);
             %         %将并口置0
             %         lptwrite(LptAddress,0);
             %关闭PortAudio对象
@@ -349,6 +357,7 @@ try
             RestrictKeysForKbCheck([]);
             %终止程序
             return;
+            %如果空格键被按下
         elseif KeyCode(KbName('space'))
             %         %并口标记252表示实验跳转至下一个图案
             %         lptwrite(LptAddress,252);
@@ -359,6 +368,7 @@ try
             PsychPortAudio('Stop', HandlePortAudio);
             %等待空格键松开
             KbWait([],1);
+            %跳至下一个while循环
             continue;
         end
         
@@ -375,38 +385,58 @@ try
     
     %%
     %存储记录文件
+    
     %记录文件路径
     RecordPath = ['.',filesep,'RecordFiles',filesep,SubjectName{1}];
+    %如果路径不存在则新建相应的路径
     if ~exist(RecordPath,'dir')
         mkdir(RecordPath);
     end
     %记录文件名
     RecordFile = [RecordPath,filesep,DateString,'.mat'];
     
-    %存储的变量包括NumCodeDot,NumTrial,SequenceCodeDot
-    save(RecordFile,'iPattern');
+    Run = NumUsedRow + 1;
+    %存储的变量
+    save(RecordFile,'iPattern','Run');
     
+    %根据已经进行Run数对MatrixPattern.m进行操作
+    NumUsedRow = NumUsedRow + 1;
+    
+    %如果MatrixPattern已经被用完
+    if NumUsedRow >=NumRun
+        %删除MatrixPattern.m
+        delete MatrixPattern.m;
+        
+    else
+        %否则更新MatrixPattern.m中的NumUsedRow
+        save MatrixPattern.m MatrixPattern  NumUsedRow;
+    end
+    
+    clear MatrixPattern NumUsedRow;
     
     %恢复Matlab命令行窗口对键盘输入的响应
     ListenChar(0);
     %恢复KbCheck函数对所有键盘输入的响应
     RestrictKeysForKbCheck([]);
+    %关闭PsychPortAudio
     PsychPortAudio('Close');
+    %关闭所有Psych窗口
     sca;
     
     
     %%
     %如果程序执行出错则执行下面程序
 catch Error
-    
+    %关闭PsychPortAudio
     PsychPortAudio('Close');
+    %关闭所有Psych窗口
     sca;
     %恢复Matlab命令行窗口对键盘输入的响应
     ListenChar(0);
     %恢复KbCheck函数对所有键盘输入的响应
     RestrictKeysForKbCheck([]);
     
-    
+    %在命令行输出错误内容
     rethrow(Error);
     
 end

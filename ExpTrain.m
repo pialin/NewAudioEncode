@@ -5,8 +5,10 @@
 %Windows 8.1 x64
 
 %%
+%关闭所有绘图窗口并清除所有变量
 close all;
 clear;
+%关闭已经打开的Psych窗口
 sca;
 
 %修改工作路径至当前M文件所在目录
@@ -18,12 +20,13 @@ cd(Path(1:FileSepIndex(end)));
 MatlabRelease = version('-release');
 
 
-%随机数生成器状态设置
+%随机数生成器状态设置(保证每一次随机出来的图案顺序都不一样)
 if str2double(MatlabRelease(1:end-1))>=2011%Matla为R2011之后版本
     rng('shuffle');
 else
     rand('twister',mod(floor(now*8640000),2^31-1));%Matlab为R2011之前版本
 end
+
 %%
 %显示部分设置
 %执行默认设置2
@@ -111,9 +114,8 @@ try
     PsychPortAudio('Volume', HandlePortAudio, AudioVolume);
     
     
-    %进行第一次Flip以获取时间
-    vbl = Screen('Flip', PointerWindow);
-    
+
+    %根据设置的难度确定选取图案的序号范围
     PatternRangeMin = min(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
     PatternRangeMax = max(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
     
@@ -132,48 +134,58 @@ try
     end
         
     
-    
+    %标志当前是否需要跳至下一个图案
     FlagNext = true;
+    %将初始图案序号归零
     iPattern = 0;
+    
+    %进行第一次Flip以获取时间
+    vbl = Screen('Flip', PointerWindow);
    
     while 1
-        
+        %如果FlagNext为真则跳至下一个图案
         if FlagNext ==true
+            %将上一个图案序号保存于iPatternTemp中
             iPatternTemp = iPattern;
+            %生成下一个图案的序号
             iPattern = randi([PatternRangeMin,PatternRangeMax]);
             FlagNext = false;
-
+            %仅当前后两次的图案序号不同时读取声音和图案绘制数据
             if iPattern ~= iPatternTemp
                 eval(['Pattern',num2str(iPattern)]);
                 eval(['load Sound',num2str(iPattern),'.mat']);
             end
         
+            
         PsychPortAudio('Stop', HandlePortAudio);
         
-        %填充到PortAudio对象的Buffer中
+        %填充编码声音数据到PortAudio对象的Buffer中
         PsychPortAudio('FillBuffer', HandlePortAudio,[DataAudio,zeros(2,round(TimeGapSilence*AudioSampleRate))]);
-        %播放声音
+        %播放声音(除非被停止否则无限循环播放)
         PsychPortAudio('Start', HandlePortAudio, 0, AudioStartTime, WaitUntilDeviceStart);
         
         end
         
 
         %%
+        %根据图案的序号对应不同的图案绘制方法
         if iPattern>=1 && iPattern<=16
+            %每一段图案的绘制
             for iSeg =1:NumSeg
-                
+                %如果空格键按下则立刻停止绘图
                 if FlagNext == true
                     break;
                 end
-                
+                %每一帧图案的绘制
                 for iFrame = 1:SegFrame(iSeg)
-                    
+                    %每一个多边形的绘制
                     for iPolygon = 1:NumPolygon(iSeg)
                         Screen('FillPoly',PointerWindow,white,PolygonVertex{iSeg}(:,2*iPolygon-1:2*iPolygon,iFrame),1);
                     end
                     
-                    
+                    %提示程序绘图已经完成
                     Screen('DrawingFinished', PointerWindow);
+                    %将绘制的图形显示在屏幕上
                     vbl = Screen('Flip', PointerWindow, vbl + (FrameWait-0.5) * TimePerFlip);
                     %读取键盘输入，若Esc键被按下则立刻退出程序
                     [IsKeyDown,~,KeyCode] = KbCheck;
@@ -191,8 +203,9 @@ try
                         RestrictKeysForKbCheck([]);
                         %终止程序
                         return;
+                        %如果空格键按下则停止绘图跳至下一个图案
                     elseif IsKeyDown && KeyCode(KbName('space'))
-                        
+                        %将跳转到下一个图案的标志变量置1
                         FlagNext = true;
                         
                         PsychPortAudio('Stop', HandlePortAudio);
@@ -205,14 +218,15 @@ try
             end
             
         elseif iPattern>=17 && iPattern<=20
+            %每一段图案的绘制
             for iSeg =1:NumSeg
                 
                 if FlagNext == true
                     break;
                 end
-                
+                %每一帧图案的绘制
                 for iFrame = 1:SegFrame(iSeg)
-                    
+                    %每一个多边形和扇形的绘制
                     if iSeg == NumSeg
                         Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut,StartAngle,ArcAngle(iFrame));
                         Screen('FillArc',PointerWindow,ColorRoundIn,RectRoundIn,StartAngle,ArcAngle(iFrame));
@@ -255,15 +269,15 @@ try
             end
             
         elseif iPattern>=21 && iPattern<=24
-            
+            %每一段图形的绘制
             for iSeg = 1:NumSeg
                 
                 if FlagNext == true
                     break;
                 end
-                
+                %每一帧图形的绘制
                 for iFrame = 1:SegFrame(iSeg)
-                    
+                    %每一个扇形的绘制
                     for iArc = 1:NumArc(iSeg)
                         
                         Screen('FillArc',PointerWindow,ColorRoundOut,RectRoundOut{iSeg}(iArc,:),StartAngle(iSeg),ArcAngle{iSeg}(iArc,iFrame));
@@ -338,7 +352,9 @@ try
     ListenChar(0);
     %恢复KbCheck函数对所有键盘输入的响应
     RestrictKeysForKbCheck([]);
+    %关闭PsychPortAudio
     PsychPortAudio('Close');
+     %关闭所有Psych窗口
     sca;
     
     
@@ -347,15 +363,16 @@ try
     %%
     %如果程序执行出错则执行下面程序
 catch Error
-    
+    %关闭PsychPortAudio
     PsychPortAudio('Close');
+    %关闭所有Psych窗口
     sca;
     %恢复Matlab命令行窗口对键盘输入的响应
     ListenChar(0);
     %恢复KbCheck函数对所有键盘输入的响应
     RestrictKeysForKbCheck([]);
     
-    
+    %在命令行输出错误的内容
     rethrow(Error);
     
 end

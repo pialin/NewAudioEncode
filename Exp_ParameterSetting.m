@@ -41,23 +41,60 @@ FreqHintSound = 800;
 %%
 %实验参数设置
 %进行多少个Trial
-NumTrial = 2;
+NumTrial = 24;
 %总图案个数
 NumPattern =24;
-
-
-%编码声音重复次数
-ReplayTimes = 2;
-
-
-
-
 
 %难度设置
 DifficultySetting = 1:3;
 PatternDifficulty(1,:) =  1: 8;
 PatternDifficulty(2,:) =  9:16;
 PatternDifficulty(3,:) = 17:24;
+
+%%
+NumRun = 10;
+
+
+if abs(fix(NumRun*NumTrial/NumPattern)-NumRun*NumTrial/NumPattern) >1e-10
+    errordlg('NumRun*NumTrial应能被NumPattern整除！','参数设置错误');
+    return;
+end
+
+if exist('MatrixPattern.mat','file') 
+    
+    load MatrixPattern.mat;
+    
+else
+    
+    %获取当前Matlab版本
+    MatlabRelease = version('-release');
+    
+    %随机数生成器状态设置
+    if str2double(MatlabRelease(1:end-1))>=2011%Matla为R2011之后版本
+        rng('shuffle');
+    else
+        rand('twister',mod(floor(now*8640000),2^31-1));%Matlab为R2011之前版本
+    end
+    
+    %根据难度设置计算选用的图案序号范围
+    PatternRangeMin = min(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
+    PatternRangeMax = max(reshape(PatternDifficulty(DifficultySetting,:),1,[]),[],2);
+    
+    MatrixPattern = repmat(PatternRangeMin:PatternRangeMax,1,round(NumRun*NumTrial/NumPattern));
+    
+    MatrixPattern = reshape(Shuffle(MatrixPattern),NumRun,[]);
+    
+    NumUsedRow = 0;
+   
+    save MatrixPattern.mat MatrixPattern NumUsedRow;
+
+end
+
+
+
+
+
+
 
 %%
 
@@ -69,7 +106,7 @@ TimeWhiteNoise = 2;
 
 TimeGapSilence = 2;
 
-TimeSum = 3; 
+TimeSum = 3;
 
 
 %并口相关设置
