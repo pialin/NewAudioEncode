@@ -399,17 +399,17 @@ try
     %存储的变量
     save(RecordFile,'iPattern','Run');
     
-    %根据已经进行Run数对MatrixPattern.m进行操作
+    %根据已经进行Run数对MatrixPattern.mat进行操作
     NumUsedRow = NumUsedRow + 1;
     
     %如果MatrixPattern已经被用完
     if NumUsedRow >=NumRun
-        %删除MatrixPattern.m
-        delete MatrixPattern.m;
+        %删除MatrixPattern.mat
+        delete MatrixPattern.mat;
         
     else
-        %否则更新MatrixPattern.m中的NumUsedRow
-        save MatrixPattern.m MatrixPattern  NumUsedRow;
+        %否则更新MatrixPattern.mat中的NumUsedRow
+        save MatrixPattern.mat MatrixPattern  NumUsedRow;
     end
     
     clear MatrixPattern NumUsedRow;
